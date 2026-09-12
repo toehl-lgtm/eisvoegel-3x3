@@ -452,8 +452,11 @@ tr:nth-child(3) .rank-badge { background: #FED7AA; color: #9A3412; }
     <div style="font-size:36px; margin-bottom:8px;">🔒</div>
     <div style="font-size:18px; font-weight:800; color:var(--midnight); margin-bottom:6px;">Eisvögel Intern</div>
     <div style="font-size:13px; color:var(--muted); margin-bottom:18px; line-height:1.4;">Bitte Passwort eingeben, um den geschützten Kader und die Spielerinnen freizuschalten:</div>
-    <input id="pass-input" type="password" placeholder="Passwort..." style="width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:10px; font-size:16px; text-align:center; font-weight:700; color:var(--midnight); outline:none; margin-bottom:14px;">
-    <button onclick="checkPassword()" style="width:100%; background:var(--midnight); color:white; border:none; padding:12px; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer;">Kader entsperren</button>
+    <div style="position:relative; margin-bottom:14px;">
+      <input id="pass-input" type="password" placeholder="Passwort eingeben..." style="width:100%; padding:12px 44px 12px 14px; border:2px solid var(--border); border-radius:10px; font-size:15px; text-align:center; font-weight:700; color:var(--midnight); outline:none;">
+      <button type="button" onclick="togglePassVisibility()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:18px; cursor:pointer; padding:4px;" title="Passwort anzeigen/verbergen">👁️</button>
+    </div>
+    <button id="pass-submit-btn" onclick="checkPassword()" style="width:100%; background:var(--midnight); color:white; border:none; padding:13px; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; transition:all 0.2s;">Kader entsperren</button>
     <div id="pass-error" style="display:none; color:#EF4444; font-size:12px; font-weight:700; margin-top:10px;">Falsches Passwort! Bitte erneut versuchen.</div>
   </div>
 </div>
@@ -561,19 +564,53 @@ tr:nth-child(3) .rank-badge { background: #FED7AA; color: #9A3412; }
 const BIB_COLORS = ['Rot', 'Blau', 'Grün', 'Gelb', 'Weiß', 'Schwarz', 'Lila', 'Orange', 'Türkis', 'Pink', 'Silber', 'Gold'];
 
 // Base 8 teams
+const DUMMY_TEAMS = [{"id": "T1", "name": "Team 1", "bib": "Rot", "players": ["Spielerin 1.1", "Spielerin 1.2", "Spielerin 1.3", "Spielerin 1.4"]}, {"id": "T2", "name": "Team 2", "bib": "Blau", "players": ["Spielerin 2.1", "Spielerin 2.2", "Spielerin 2.3", "Spielerin 2.4"]}, {"id": "T3", "name": "Team 3", "bib": "Grün", "players": ["Spielerin 3.1", "Spielerin 3.2", "Spielerin 3.3"]}, {"id": "T4", "name": "Team 4", "bib": "Gelb", "players": ["Spielerin 4.1", "Spielerin 4.2", "Spielerin 4.3", "Spielerin 4.4"]}, {"id": "T5", "name": "Team 5", "bib": "Weiß", "players": ["Spielerin 5.1", "Spielerin 5.2", "Spielerin 5.3", "Spielerin 5.4"]}, {"id": "T6", "name": "Team 6", "bib": "Schwarz", "players": ["Spielerin 6.1", "Spielerin 6.2", "Spielerin 6.3", "Spielerin 6.4"]}, {"id": "T7", "name": "Team 7", "bib": "Lila", "players": ["Spielerin 7.1", "Spielerin 7.2", "Spielerin 7.3"]}, {"id": "T8", "name": "Team 8", "bib": "Orange", "players": ["Spielerin 8.1", "Spielerin 8.2", "Spielerin 8.3", "Spielerin 8.4"]}];
+
 const INITIAL_8_TEAMS = DUMMY_TEAMS;
 
-const ENCRYPTED_ROSTER = "PhJRHwtHXUVOMVhRWk9HCQQBAEtJVk0xAgQBRVhRWk9HBQwOR1NTVD0KE0dARUsDGg4cAhcfR1NTLU0jFQwIBEk5FwEWCAtMTTxCQEZHS0VOLQgdGA4NRzYYBAEBVkcwVlFFR0VTVCUQCwwNRToQHhoJAhdMTTxCQkZHS0VOLwwHAgpFLAAeFh0aGAhFTzBdV0BRKxJJRx5ODA1RTE9HM1dOSUlRGA4IAkdWRUsnEw4IR1dOSUlRFAYHRV9MRysfFxpHS0VOFQUSDwoXFEdWRTJROgAREwRMLwgdAxxFTzBdU0BRWk9HJgsNFh0SBQYERykNFRoQHgYLR005VF1aVENFRTYNFwgbVi0EEgAeRUEmR1tMRUlMRyQSBAMACQBMNgobGwYRHUVEMFhBX004GklMHksaEk1fR0c4VktfVk0LBggJR1NTVDsABghMVktfVk0HDgdOX0lRMR05ElVcAwodVENFRRUABBAWBBxHXUU3RyQSBBsNBkUgBAcUE09NMlRaTEtfVk0kCQsNRTscFQcJDhEWRUEmR1tMRUlMRzkSAwMERyMJDRsWGA0EBA0JF0lbI15XTkcxGEVTDU0MA0dWRUsnQk1JR0cCBAQWVFVFRTEJBARTQk1JR0cODAtRTE9HIAAAB0tfVk0VCwQVABsAVFVFPEcrDBwfHw5FTzBdUUBRWk9HKwACDEk4FwELAkVEMFhHX01JR0cqFwwXEx0MDABMKwwGHg4QFEVEMFhBWV5RTkdARUsyGBsKCQwNRSQcGAENAgwBABtTXjpUVUxOOBRfVhRHDgFOX0lRIlpHS0VOCwgeE01fR0c4AAgeVlpHS0VOBwARVFVFRTIJDDUGRl8BAUdARUsDGg4cAhcfR1NTLU0mAgkFBEk+GQMMCQRMNgYfF09NMlRaTEtfVk0oBhYEBEk7FxwECQoaDApTXjpUU0xOSUlRMxkARzYPDRwREx0RR005VF1aVENFRTEJFwwAF08uBh8NAQBTXjpUVUxOOBRfVhRHDgFOX0lRIllHS0VOCwgeE01fR0c4AAgeVllHS0VOBwARVFVFRTYPDR4SBBVHS0VOFQUSDwoXFEdWRTJROgYJCwwNCwhTOwAJC0VEMFhFX01JR0ckBAcdH08oCAkARUEmR1tMRUlMRycWGgpFLAQfFQgBVkcwVlFFR0VTVCEACwBMMQAfGgIECQsfRUEmR11MRTgRSUkIVAYBRV9MRz1EVENFRQsNCAxRTE9HMwANCElEVENFRQcFB0tJVk0pDgkNR0VTVB8JBhwJFxpRTE8+RSQBAAUaE08/AhUcAAcVEwMBE0VEMFhFX01JR0chBBsfEwEARy4JFwcfEx1FTzBdUUBRWk9HLAQeCQAWVj0KDwkKRUEmR11KJiJFRzQOWk8eRQwIR1NTVDtdRUlMRwcSGwpHXUVOMQwSG09dRUlMRwsaFE1fR0cjFwgdEQpHS0VOFQUSDwoXFEdWRTJROgYTDgRMNgobAQoXR005VF1aVENFRSACCwBTJQocEAQAAUlbI15RTkdARUs/HwMMBgtMIBMWFwMER005VFtcR1tMRUlMRzkSAwMMCQBMNgobAQ4HR005VFtaVDIYOg==";
-const DUMMY_TEAMS = [{"id": "T1", "name": "Team 1", "bib": "Rot", "players": ["Spielerin 1.1", "Spielerin 1.2", "Spielerin 1.3", "Spielerin 1.4"]}, {"id": "T2", "name": "Team 2", "bib": "Blau", "players": ["Spielerin 2.1", "Spielerin 2.2", "Spielerin 2.3", "Spielerin 2.4"]}, {"id": "T3", "name": "Team 3", "bib": "Gr\u00fcn", "players": ["Spielerin 3.1", "Spielerin 3.2", "Spielerin 3.3"]}, {"id": "T4", "name": "Team 4", "bib": "Gelb", "players": ["Spielerin 4.1", "Spielerin 4.2", "Spielerin 4.3", "Spielerin 4.4"]}, {"id": "T5", "name": "Team 5", "bib": "Wei\u00df", "players": ["Spielerin 5.1", "Spielerin 5.2", "Spielerin 5.3", "Spielerin 5.4"]}, {"id": "T6", "name": "Team 6", "bib": "Schwarz", "players": ["Spielerin 6.1", "Spielerin 6.2", "Spielerin 6.3", "Spielerin 6.4"]}, {"id": "T7", "name": "Team 7", "bib": "Lila", "players": ["Spielerin 7.1", "Spielerin 7.2", "Spielerin 7.3"]}, {"id": "T8", "name": "Team 8", "bib": "Orange", "players": ["Spielerin 8.1", "Spielerin 8.2", "Spielerin 8.3", "Spielerin 8.4"]}];
+const ENCRYPTED_ROSTER = {"salt":"96750b9f0a5fafb891505c984010ee85","iv":"0529585214becb3404bd420d","tag":"f4cbee16bb6b8eead1aa81c9f4b81058","data":"bdb65a7727e9251403bde0749acdf53ea131c1946a7c69d607036c2cc8400341dedfe2d82212d88fdfc7a4fd44ee58dbf1b7a6a9b986e225c205cbb0371def420a0c657d4466f73e270e386a285eab60e7cecddfd3e23c6d407930e3ee6719bd39b8f00311342726693ad31141adbda60999efef16739e9317e8cb3ef216811e6812b2dc1306cf5cda8c22bdd1d5b06b8aed097b8239dd7cce62f77327e231c58e7e1bb696e4ce6c9e49dce1374c9f65ae7bd1b43b58c42239bf612232ad4dd7784181ee6c952e18c0470cff79fe59f916154c082e71da79c0e5525d21dc2ef357d11224c7f5e300796c28c036fac81e9da0f3646e60818dde09440fcb6c4c40b65a858109fbd00469cfac1b13908bab9082c6fa6adc247dbe57f637331f4c5ea3a4f8df74e7707cf7cd487a67ee16d9b1d24a2606dd8db5d8ec6a927b98756ba2322a9c342fb2da129abd9f5d9f26f4563928b3232084435ed0505ac5618e349b5dea2ae4ca6c0ca2296fd781e2e96a94836ffa247f8be1495cd755eb1058587cb1d822b480a75fc811bbfe2f4ffee908a0e7fb8cfa5a19563cc282d7961b104b501f07f53945edfcdad67831f0dd6529f3c594ae46273e76251641cd69d8df66c54d03f1c729adb5512b630ce326ec9edc966868df482d75e73142927cbcaadd7f13cc0fef0e0440dd6d5a0d896b0ba09169872acad3f73b21889dd5dc9c3ec4fea326e99f77fb9d2e08311918e7183c7c358725a1ea9150ef87f9b59cee5b299b8be8a49330f1fb1215b48432fe8911d74062b7126cd90e8cc302d50d30c30b86c0de54d415d62adcca86574693b2c2057bde3f4ef52ab3c8be14ffdd6be0e8a340d49f3ead3a317e55f3019d45829661af3b2f568cf07f1f411ec6f0f95e28b4769c447c2992f61f1e98fa38cd0165d5e5f3499d7023dc2e2d52c0a4c5010c20054410319e7b177f5cc395d27405b88bb4806736c33fadfd9bf093e18bc105368490b87d46920069b71b339c165c7564ab21f550ca3274b7bad8707c9333491c10f39e1e61fd6cb981679894893f5d377761ae5ab2a1e61c0834716ca03f05f8d990acd503a9e55cb29f725b1a633baa3951f9cf631d915c222f4750b5da3a9dffdc71348cf4ffff6336b46157cfc5c00d35da3065d360decb939e26db86ad444172209eab5dedd22c8205f6d47a2eca6bfb4391123654cc5020e8fe4a345bfb1da54a97710124ae54b21af54856f950b8ae487a7f163d8d04b2d87f881aff11e47f1521e87a6910b87718277967f791dec8027d19e0"};
+function togglePassVisibility() {
+  const inp = document.getElementById('pass-input');
+  if (inp) {
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+}
 
-function xorDecrypt(b64, pass) {
+async function aesDecrypt(payload, pass) {
   try {
-    const raw = atob(b64);
-    let out = '';
-    for (let i = 0; i < raw.length; i++) {
-      out += String.fromCharCode(raw.charCodeAt(i) ^ pass.charCodeAt(i % pass.length));
-    }
-    return JSON.parse(out);
+    const enc = new TextEncoder();
+    const passKey = await window.crypto.subtle.importKey(
+      "raw",
+      enc.encode(pass),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+    const salt = new Uint8Array(payload.salt.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const iv = new Uint8Array(payload.iv.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const tag = new Uint8Array(payload.tag.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const cipherBytes = new Uint8Array(payload.data.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+    const combined = new Uint8Array(cipherBytes.length + tag.length);
+    combined.set(cipherBytes, 0);
+    combined.set(tag, cipherBytes.length);
+
+    const key = await window.crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+      passKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"]
+    );
+
+    const decrypted = await window.crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      combined
+    );
+
+    const dec = new TextDecoder();
+    return JSON.parse(dec.decode(decrypted));
   } catch(e) {
     return null;
   }
@@ -584,9 +621,16 @@ try {
   ORIGINAL_ROSTER = JSON.parse(localStorage.getItem('eisvoegel_original_roster'));
 } catch(e){}
 
-function checkPassword() {
-  const inp = document.getElementById('pass-input').value.trim().toLowerCase();
-  const decrypted = xorDecrypt(ENCRYPTED_ROSTER, inp);
+async function checkPassword() {
+  const btn = document.getElementById('pass-submit-btn');
+  const err = document.getElementById('pass-error');
+  if (err) err.style.display = 'none';
+  if (btn) {
+    btn.innerText = 'Wird entschlüsselt...';
+    btn.disabled = true;
+  }
+  const inp = document.getElementById('pass-input').value.trim();
+  const decrypted = await aesDecrypt(ENCRYPTED_ROSTER, inp);
   if (decrypted && Array.isArray(decrypted)) {
     ORIGINAL_ROSTER = decrypted;
     localStorage.setItem('eisvoegel_unlocked', 'true');
@@ -600,15 +644,19 @@ function checkPassword() {
     renderStandings();
     renderPlayoffs();
   } else {
-    document.getElementById('pass-error').style.display = 'block';
+    if (err) err.style.display = 'block';
+    if (btn) {
+      btn.innerText = 'Freischalten';
+      btn.disabled = false;
+    }
   }
 }
 
-function initAuth() {
+async function initAuth() {
   const urlParams = new URLSearchParams(window.location.search);
   const keyParam = urlParams.get('key') || urlParams.get('pass') || urlParams.get('pw');
   if (keyParam) {
-    const decrypted = xorDecrypt(ENCRYPTED_ROSTER, keyParam.toLowerCase());
+    const decrypted = await aesDecrypt(ENCRYPTED_ROSTER, keyParam.trim());
     if (decrypted && Array.isArray(decrypted)) {
       ORIGINAL_ROSTER = decrypted;
       localStorage.setItem('eisvoegel_unlocked', 'true');
@@ -621,6 +669,11 @@ function initAuth() {
       window.history.replaceState({}, document.title, cleanUrl);
       const overlay = document.getElementById('unlock-overlay');
       if (overlay) overlay.style.display = 'none';
+      renderTeamCountButtons();
+      renderTeams();
+      renderMatches();
+      renderStandings();
+      renderPlayoffs();
       return;
     }
   }
