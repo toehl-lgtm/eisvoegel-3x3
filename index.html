@@ -552,6 +552,253 @@ tr:nth-child(3) .rank-badge { background: #FED7AA; color: #9A3412; }
   overflow-y: auto;
 }
 
+
+/* ============================================================
+   PRO ATHLETIC TEAMS & ROSTER GRID (EISVÖGEL DESIGN)
+============================================================ */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.team-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 14px rgba(10, 34, 64, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.team-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(10, 34, 64, 0.09);
+}
+
+.team-card-top {
+  background: var(--midnight);
+  color: white;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 4px solid var(--magenta);
+}
+
+.team-number-pill {
+  background: rgba(255,255,255,0.18);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.team-bib-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.12);
+  padding: 2px 8px 2px 6px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.bib-select-sleek {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.bib-select-sleek option {
+  background: white;
+  color: var(--midnight);
+}
+
+.team-del-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.team-del-btn:hover {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.team-name-row {
+  padding: 12px 14px 6px 14px;
+  background: white;
+  display: flex;
+  align-items: center;
+}
+
+.team-name-field {
+  width: 100%;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--midnight);
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  padding: 5px 8px;
+  margin-left: -8px;
+  outline: none;
+  transition: all 0.15s;
+}
+.team-name-field:hover {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+.team-name-field:focus {
+  background: white;
+  border-color: var(--magenta);
+  box-shadow: 0 0 0 3px rgba(228,11,125,0.12);
+}
+
+.team-roster-cont {
+  padding: 6px 14px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.player-row-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 5px 8px;
+  transition: all 0.15s;
+}
+.player-row-item:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.player-num-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.player-text-input {
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--midnight);
+  width: 100%;
+  outline: none;
+  padding: 2px 0;
+}
+.player-text-input:focus {
+  font-weight: 700;
+  color: #000;
+}
+
+.player-remove-x {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.15s;
+}
+.player-remove-x:hover {
+  color: #EF4444;
+  background: #FEE2E2;
+}
+
+.btn-add-player-sleek {
+  margin-top: 4px;
+  background: #FFF1F6;
+  border: 1.5px dashed #FBCFE8;
+  color: var(--magenta);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.btn-add-player-sleek:hover {
+  background: #FCE7F3;
+  border-color: var(--magenta);
+  box-shadow: 0 2px 6px rgba(228,11,125,0.15);
+}
+
+.add-team-card-sleek {
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+  border: 2px dashed #94A3B8;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  cursor: pointer;
+  padding: 24px;
+  transition: all 0.2s;
+  text-align: center;
+}
+.add-team-card-sleek:hover {
+  border-color: var(--magenta);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+.add-team-icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 4px 14px rgba(228,11,125,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--magenta);
+  font-weight: 900;
+  margin-bottom: 12px;
+  transition: transform 0.2s;
+}
+.add-team-card-sleek:hover .add-team-icon-circle {
+  transform: scale(1.08);
+}
+
 </style>
 </head>
 <body>
@@ -1379,60 +1626,66 @@ function renderTeams() {
   if (!container) return;
   container.innerHTML = '';
 
+  const BIB_DOTS = {
+    'Rot': '🔴', 'Blau': '🔵', 'Grün': '🟢', 'Gelb': '🟡',
+    'Weiß': '⚪', 'Schwarz': '⚫', 'Lila': '🟣', 'Orange': '🟠',
+    'Türkis': '🟢', 'Pink': '🌸', 'Silber': '🔘', 'Gold': '🟡'
+  };
+
   state.teams.forEach((team, tIdx) => {
     const card = document.createElement('div');
     card.className = 'team-card';
-    
+
     let playersHtml = '';
     team.players.forEach((p, pIdx) => {
       playersHtml += `
-        <div class="player-tag">
-          <input type="text" value="${p}" onchange="updatePlayerName(${tIdx}, ${pIdx}, this.value)" placeholder="Spielerin Name">
-          <button class="player-del-btn" onclick="removePlayer(${tIdx}, ${pIdx})" title="Spielerin entfernen">&times;</button>
+        <div class="player-row-item">
+          <span class="player-num-dot">${pIdx + 1}</span>
+          <input class="player-text-input" type="text" value="${p}" onchange="updatePlayerName(${tIdx}, ${pIdx}, this.value)" placeholder="Spielerin Name (z.B. Emma)">
+          <button class="player-remove-x" onclick="removePlayer(${tIdx}, ${pIdx})" title="Spielerin entfernen">&times;</button>
         </div>
       `;
     });
 
     let bibOptions = '';
     BIB_COLORS.forEach(c => {
-      bibOptions += `<option value="${c}" ${team.bib === c ? 'selected' : ''}>${c}</option>`;
+      const dot = BIB_DOTS[c] || '🎽';
+      bibOptions += `<option value="${c}" ${team.bib === c ? 'selected' : ''}>${dot} ${c}</option>`;
     });
 
     card.innerHTML = `
-      <div class="team-header">
-        <div style="flex:1;">
-          <div style="font-size:11px; font-weight:800; color:var(--magenta); text-transform:uppercase; margin-bottom:2px;">
-            TEAM ${tIdx + 1}
-          </div>
-          <input class="team-name-input" type="text" value="${team.name}" onchange="updateTeamName(${tIdx}, this.value)" title="Teamname bearbeiten">
+      <div class="team-card-top">
+        <div class="team-number-pill">TEAM ${tIdx + 1}</div>
+        <div class="team-bib-wrapper" title="Trikotfarbe ändern">
+          <select class="bib-select-sleek" onchange="state.teams[${tIdx}].bib = this.value; saveState(); renderTeams(); renderMatches();">
+            ${bibOptions}
+          </select>
         </div>
-        <select class="bib-select" onchange="state.teams[${tIdx}].bib = this.value; saveState(); renderTeams(); renderMatches();">
-          ${bibOptions}
-        </select>
-        <button onclick="removeSpecificTeam(${tIdx})" style="background:none; border:none; color:#EF4444; font-size:16px; cursor:pointer; padding:4px;" title="Team löschen">&times;</button>
+        <button class="team-del-btn" onclick="removeSpecificTeam(${tIdx})" title="Team ${tIdx + 1} löschen">✕</button>
       </div>
-      <div class="players-list">
+
+      <div class="team-name-row">
+        <input class="team-name-field" type="text" value="${team.name}" onchange="updateTeamName(${tIdx}, this.value)" title="Klicken, um Teamnamen zu bearbeiten">
+      </div>
+
+      <div class="team-roster-cont">
         ${playersHtml}
+        <button class="btn-add-player-sleek" onclick="addPlayer(${tIdx})">
+          <span>+</span>
+          <span>Spielerin hinzufügen</span>
+        </button>
       </div>
-      <button class="add-player-btn" onclick="addPlayer(${tIdx})">+ Spielerin hinzufügen</button>
     `;
     container.appendChild(card);
   });
 
   const addCard = document.createElement('div');
-  addCard.className = 'team-card add-team-card';
-  addCard.style.display = 'flex';
-  addCard.style.flexDirection = 'column';
-  addCard.style.alignItems = 'center';
-  addCard.style.justifyContent = 'center';
-  addCard.style.minHeight = '180px';
-  addCard.style.border = '2px dashed var(--border)';
-  addCard.style.cursor = 'pointer';
+  addCard.className = 'add-team-card-sleek';
   addCard.onclick = addSingleTeam;
   addCard.innerHTML = `
-    <div style="font-size:32px; color:var(--magenta); margin-bottom:6px;">+</div>
-    <div style="font-weight:800; color:var(--midnight); font-size:14px;">Weiteres Team hinzufügen</div>
-    <div style="font-size:12px; color:var(--muted); margin-top:2px;">(Aktuell ${state.teams.length} Teams)</div>
+    <div class="add-team-icon-circle">+</div>
+    <div style="font-weight: 800; color: var(--midnight); font-size: 15px; margin-bottom: 4px;">Weiteres Team anlegen</div>
+    <div style="font-size: 12px; color: var(--muted); font-weight: 600;">(Aktuell ${state.teams.length} Teams)</div>
   `;
   container.appendChild(addCard);
 }
