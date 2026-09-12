@@ -910,7 +910,7 @@ tr:nth-child(3) .rank-badge { background: #FED7AA; color: #9A3412; }
         <button class="kader-tool-btn primary" onclick="openImportModal()">📥 Kader importieren (JSON/CSV)</button>
         <button class="kader-tool-btn" onclick="exportRosterJson()">📤 Exportieren (JSON)</button>
         <button class="kader-tool-btn" onclick="downloadTemplateCsv()">📋 Vorlage (CSV/Excel)</button>
-        <button class="kader-tool-btn eisvoegel-btn" onclick="loadEisvoegelOfficialRoster()">🏀 Eisvögel 2026 laden</button>
+        <button class="kader-tool-btn eisvoegel-btn" onclick="openSeasonOpeningModal()">🏀 Season Opening 2026 Spielerinnen</button>
       </div>
     </div>
 
@@ -1003,6 +1003,21 @@ try {
   ORIGINAL_ROSTER = JSON.parse(localStorage.getItem('eisvoegel_original_roster'));
 } catch(e){}
 
+function openSeasonOpeningModal() {
+  const overlay = document.getElementById('unlock-overlay');
+  const err = document.getElementById('pass-error');
+  if (err) err.style.display = 'none';
+  if (overlay) {
+    overlay.style.display = 'flex';
+    document.getElementById('pass-input')?.focus();
+  }
+}
+
+function closeSeasonOpeningModal() {
+  const overlay = document.getElementById('unlock-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
 async function checkPassword() {
   const btn = document.getElementById('pass-submit-btn');
   const err = document.getElementById('pass-error');
@@ -1018,17 +1033,22 @@ async function checkPassword() {
     localStorage.setItem('eisvoegel_unlocked', 'true');
     localStorage.setItem('eisvoegel_original_roster', JSON.stringify(decrypted));
     state.teams = decrypted;
+    state.scores = {};
+    state.playoffScores = {};
+    state.tournamentMode = 'GROUPS';
     saveState();
-    document.getElementById('unlock-overlay').style.display = 'none';
+    closeSeasonOpeningModal();
+    updateModePills();
     renderTeamCountButtons();
     renderTeams();
     renderMatches();
     renderStandings();
     renderPlayoffs();
+    alert('🏀 Season Opening 2026 Spielerinnen erfolgreich geladen!');
   } else {
     if (err) err.style.display = 'block';
     if (btn) {
-      btn.innerText = 'Freischalten';
+      btn.innerText = 'Spielerinnen freischalten & laden';
       btn.disabled = false;
     }
   }
@@ -1043,14 +1063,12 @@ async function initAuth() {
       ORIGINAL_ROSTER = decrypted;
       localStorage.setItem('eisvoegel_unlocked', 'true');
       localStorage.setItem('eisvoegel_original_roster', JSON.stringify(decrypted));
-      if (!localStorage.getItem('eisvoegel_flex_teams')) {
-        state.teams = decrypted;
-        saveState();
-      }
+      state.teams = decrypted;
+      saveState();
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
-      const overlay = document.getElementById('unlock-overlay');
-      if (overlay) overlay.style.display = 'none';
+      closeSeasonOpeningModal();
+      updateModePills();
       renderTeamCountButtons();
       renderTeams();
       renderMatches();
@@ -1060,13 +1078,13 @@ async function initAuth() {
     }
   }
 
+  // If already unlocked before and no custom teams, load original roster
   const isUnlocked = localStorage.getItem('eisvoegel_unlocked') === 'true';
-  const savedTeams = localStorage.getItem('eisvoegel_flex_teams');
-  if (!isUnlocked && !savedTeams) {
-    const overlay = document.getElementById('unlock-overlay');
-    if (overlay) overlay.style.display = 'flex';
-    document.getElementById('pass-input')?.focus();
+  if (isUnlocked && ORIGINAL_ROSTER && !localStorage.getItem('eisvoegel_flex_teams')) {
+    state.teams = ORIGINAL_ROSTER;
+    saveState();
   }
+  // NEVER block the app on first visit! Everyone can use the app immediately.
 }
 
 document.addEventListener('DOMContentLoaded', () => {
