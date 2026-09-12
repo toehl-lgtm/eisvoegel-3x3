@@ -442,6 +442,116 @@ tr:nth-child(3) .rank-badge { background: #FED7AA; color: #9A3412; }
   }
 }
 
+
+/* TOURNAMENT MODE & IMPORT TOOLS */
+.mode-selector-bar {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mode-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.mode-pill {
+  background: #F1F5F9;
+  border: 1px solid var(--border);
+  color: var(--midnight);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mode-pill:hover { background: #E2E8F0; }
+.mode-pill.active {
+  background: var(--midnight);
+  color: white;
+  border-color: var(--midnight);
+  box-shadow: 0 2px 8px rgba(10,34,64,0.2);
+}
+
+.kader-tools-bar {
+  background: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.kader-tools-title { font-size: 13px; font-weight: 700; color: var(--midnight); display: flex; align-items: center; gap: 6px; }
+.kader-tools-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.kader-tool-btn {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--midnight);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+.kader-tool-btn:hover { background: #F1F5F9; border-color: #94A3B8; }
+.kader-tool-btn.primary { background: var(--midnight); color: white; border-color: var(--midnight); }
+.kader-tool-btn.primary:hover { background: #1E3A5F; }
+.kader-tool-btn.eisvoegel-btn { background: #FFF1F6; color: var(--magenta); border-color: #FBCFE8; font-weight: 800; }
+.kader-tool-btn.eisvoegel-btn:hover { background: #FCE7F3; }
+
+.bye-banner {
+  background: #EFF6FF;
+  border-left: 4px solid #3B82F6;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1D4ED8;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,34,64,0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-card {
+  background: white;
+  border-radius: 16px;
+  max-width: 560px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 </style>
 </head>
 <body>
@@ -532,6 +642,31 @@ tr:nth-child(3) .rank-badge { background: #FED7AA; color: #9A3412; }
 
   <!-- TAB 4: TEAMS (DYNAMIC TEAMS & PLAYERS) -->
   <div id="tab-teams" class="tab-content">
+    <!-- TOURNAMENT MODE BAR -->
+    <div class="mode-selector-bar">
+      <div class="selector-label">
+        <span>🏆 Turniermodus:</span>
+      </div>
+      <div class="mode-pills">
+        <button class="mode-pill active" id="mode-btn-GROUPS" onclick="setTournamentMode('GROUPS')">🏆 Gruppen & Finalspiele</button>
+        <button class="mode-pill" id="mode-btn-KNOCKOUT" onclick="setTournamentMode('KNOCKOUT')">⚡ Reiner Turnierbaum (K.o.)</button>
+        <button class="mode-pill" id="mode-btn-LEAGUE" onclick="setTournamentMode('LEAGUE')">🔄 Jeder gegen Jeden (Liga)</button>
+      </div>
+    </div>
+
+    <!-- KADER IMPORT / EXPORT BAR -->
+    <div class="kader-tools-bar">
+      <div class="kader-tools-title">
+        <span>📁 Kader-Werkzeuge:</span>
+      </div>
+      <div class="kader-tools-actions">
+        <button class="kader-tool-btn primary" onclick="openImportModal()">📥 Kader importieren (JSON/CSV)</button>
+        <button class="kader-tool-btn" onclick="exportRosterJson()">📤 Exportieren (JSON)</button>
+        <button class="kader-tool-btn" onclick="downloadTemplateCsv()">📋 Vorlage (CSV/Excel)</button>
+        <button class="kader-tool-btn eisvoegel-btn" onclick="loadEisvoegelOfficialRoster()">🏀 Eisvögel 2026 laden</button>
+      </div>
+    </div>
+
     <!-- TEAM SELECTOR BAR (ONLY IN TEAMS TAB) -->
     <div class="team-selector-bar">
       <div class="selector-label">
@@ -699,13 +834,225 @@ document.addEventListener('DOMContentLoaded', () => {
 let state = {
   teams: JSON.parse(localStorage.getItem('eisvoegel_flex_teams')) || INITIAL_8_TEAMS,
   scores: JSON.parse(localStorage.getItem('eisvoegel_flex_scores')) || {},
-  playoffScores: JSON.parse(localStorage.getItem('eisvoegel_flex_playoff_scores')) || {}
+  playoffScores: JSON.parse(localStorage.getItem('eisvoegel_flex_playoff_scores')) || {},
+  tournamentMode: localStorage.getItem('eisvoegel_tournament_mode') || 'GROUPS'
 };
+
+function setTournamentMode(mode) {
+  state.tournamentMode = mode;
+  saveState();
+  updateModePills();
+  renderMatches();
+  renderStandings();
+  renderPlayoffs();
+}
+
+function updateModePills() {
+  const currentMode = state.tournamentMode || 'GROUPS';
+  ['GROUPS', 'KNOCKOUT', 'LEAGUE'].forEach(m => {
+    const btn = document.getElementById('mode-btn-' + m);
+    if (btn) {
+      if (m === currentMode) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  const badge = document.getElementById('mode-desc-badge');
+  if (badge) {
+    const struct = getTournamentStructure();
+    badge.innerHTML = struct.desc;
+  }
+}
+
+function openImportModal() {
+  const m = document.getElementById('import-modal');
+  if (m) {
+    m.style.display = 'flex';
+    document.getElementById('import-status-msg').style.display = 'none';
+    document.getElementById('kader-paste-input').value = '';
+    document.getElementById('kader-file-input').value = '';
+  }
+}
+
+function closeImportModal() {
+  const m = document.getElementById('import-modal');
+  if (m) m.style.display = 'none';
+}
+
+function exportRosterJson() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.teams, null, 2));
+  const a = document.createElement('a');
+  a.setAttribute("href", dataStr);
+  a.setAttribute("download", `eisvoegel_turnier_teams_${state.teams.length}.json`);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function downloadTemplateCsv() {
+  const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(
+    "Teamname;Trikotfarbe;Spielerin 1;Spielerin 2;Spielerin 3;Spielerin 4\n" +
+    "Team Rot;Rot;Spielerin A;Spielerin B;Spielerin C;Spielerin D\n" +
+    "Team Blau;Blau;Spielerin E;Spielerin F;Spielerin G;Spielerin H\n" +
+    "Team Grün;Grün;Spielerin I;Spielerin J;Spielerin K;\n" +
+    "Team Gelb;Gelb;Spielerin L;Spielerin M;Spielerin N;Spielerin O\n" +
+    "Team Weiß;Weiß;Spielerin P;Spielerin Q;Spielerin R;Spielerin S\n" +
+    "Team Schwarz;Schwarz;Spielerin T;Spielerin U;Spielerin V;Spielerin W\n" +
+    "Team Lila;Lila;Spielerin X;Spielerin Y;Spielerin Z;\n" +
+    "Team Orange;Orange;Spielerin AA;Spielerin BB;Spielerin CC;Spielerin DD\n"
+  );
+  const a = document.createElement('a');
+  a.setAttribute("href", csvContent);
+  a.setAttribute("download", "turnier_teams_vorlage.csv");
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function loadEisvoegelOfficialRoster() {
+  let roster = ORIGINAL_ROSTER;
+  if (!roster) {
+    const saved = localStorage.getItem('eisvoegel_original_roster');
+    if (saved) roster = JSON.parse(saved);
+  }
+  if (!roster) {
+    const pw = prompt("Bitte Passwort für die offiziellen Eisvögel-Teams 2026 eingeben:");
+    if (!pw) return;
+    roster = await aesDecrypt(ENCRYPTED_ROSTER, pw.trim());
+  }
+  if (roster && Array.isArray(roster)) {
+    ORIGINAL_ROSTER = roster;
+    state.teams = JSON.parse(JSON.stringify(roster));
+    state.scores = {};
+    state.playoffScores = {};
+    state.tournamentMode = 'GROUPS';
+    saveState();
+    updateModePills();
+    renderTeamCountButtons();
+    renderTeams();
+    renderMatches();
+    renderStandings();
+    renderPlayoffs();
+    alert("Offizieller Eisvögel-Kader 2026 erfolgreich geladen!");
+  } else {
+    alert("Ungültiges Passwort.");
+  }
+}
+
+function parseCsvTeams(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return null;
+  const firstLine = lines[0];
+  const delim = firstLine.includes(";") ? ";" : (firstLine.includes("\t") ? "\t" : ",");
+  let startIdx = 0;
+  const firstCols = firstLine.split(delim).map(c => c.trim().toLowerCase());
+  if (firstCols.includes("team") || firstCols.includes("teamname") || firstCols.includes("trikot") || firstCols.includes("farbe")) {
+    startIdx = 1;
+  }
+  const teams = [];
+  for (let i = startIdx; i < lines.length; i++) {
+    const rawCols = lines[i].split(delim).map(c => c.replace(/^[\"'']|[\"'']$/g, "").trim()).filter(c => c.length > 0);
+    if (rawCols.length === 0) continue;
+    const teamIdx = teams.length;
+    let name = rawCols[0] || `Team ${teamIdx + 1}`;
+    let bib = (rawCols.length > 1 && BIB_COLORS.map(b=>b.toLowerCase()).includes(rawCols[1].toLowerCase()))
+      ? BIB_COLORS.find(b => b.toLowerCase() === rawCols[1].toLowerCase())
+      : BIB_COLORS[teamIdx % BIB_COLORS.length];
+    let playerStart = (rawCols.length > 1 && BIB_COLORS.map(b=>b.toLowerCase()).includes(rawCols[1].toLowerCase())) ? 2 : 1;
+    const players = rawCols.slice(playerStart).filter(p => p.length > 0);
+    teams.push({
+      id: `T${teamIdx + 1}`,
+      name: name,
+      bib: bib,
+      players: players.length > 0 ? players : [`Spielerin ${teamIdx + 1}.1`, `Spielerin ${teamIdx + 1}.2`, `Spielerin ${teamIdx + 1}.3`]
+    });
+  }
+  return teams.length >= 2 ? teams : null;
+}
+
+function processKaderImport() {
+  const fileInp = document.getElementById('kader-file-input');
+  const pasteInp = document.getElementById('kader-paste-input');
+  const statusMsg = document.getElementById('import-status-msg');
+
+  function applyImport(teams) {
+    if (!teams || teams.length < 2) {
+      statusMsg.style.display = 'block';
+      statusMsg.style.background = '#FEE2E2';
+      statusMsg.style.color = '#B91C1C';
+      statusMsg.textContent = 'Fehler: Es müssen mindestens 2 Teams vorhanden sein.';
+      return;
+    }
+    state.teams = teams;
+    state.scores = {};
+    state.playoffScores = {};
+    saveState();
+    closeImportModal();
+    updateModePills();
+    renderTeamCountButtons();
+    renderTeams();
+    renderMatches();
+    renderStandings();
+    renderPlayoffs();
+    alert(`Erfolgreich ${teams.length} Teams importiert!`);
+  }
+
+  if (fileInp && fileInp.files && fileInp.files[0]) {
+    const file = fileInp.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const content = e.target.result;
+      try {
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            applyImport(parsed);
+            return;
+          }
+        }
+      } catch(err){}
+      // Fallback or CSV
+      const parsedCsv = parseCsvTeams(content);
+      if (parsedCsv) applyImport(parsedCsv);
+      else {
+        statusMsg.style.display = 'block';
+        statusMsg.style.background = '#FEE2E2';
+        statusMsg.style.color = '#B91C1C';
+        statusMsg.textContent = 'Konnte Datei nicht parsen. Bitte Format überprüfen.';
+      }
+    };
+    reader.readAsText(file);
+  } else if (pasteInp && pasteInp.value.trim().length > 0) {
+    const val = pasteInp.value.trim();
+    try {
+      if (val.startsWith('[')) {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) {
+          applyImport(parsed);
+          return;
+        }
+      }
+    } catch(err){}
+    const parsedCsv = parseCsvTeams(val);
+    if (parsedCsv) applyImport(parsedCsv);
+    else {
+      statusMsg.style.display = 'block';
+      statusMsg.style.background = '#FEE2E2';
+      statusMsg.style.color = '#B91C1C';
+      statusMsg.textContent = 'Konnte Text nicht parsen. Bitte Format überprüfen.';
+    }
+  } else {
+    statusMsg.style.display = 'block';
+    statusMsg.style.background = '#FEE2E2';
+    statusMsg.style.color = '#B91C1C';
+    statusMsg.textContent = 'Bitte eine Datei auswählen oder Zeilen einfügen.';
+  }
+}
 
 function saveState() {
   localStorage.setItem('eisvoegel_flex_teams', JSON.stringify(state.teams));
   localStorage.setItem('eisvoegel_flex_scores', JSON.stringify(state.scores));
   localStorage.setItem('eisvoegel_flex_playoff_scores', JSON.stringify(state.playoffScores));
+  localStorage.setItem('eisvoegel_tournament_mode', state.tournamentMode || 'GROUPS');
 }
 
 function switchTab(tabId) {
@@ -723,15 +1070,33 @@ function switchTab(tabId) {
    ==================================================== */
 function getTournamentStructure() {
   const N = state.teams.length;
-  // If 4 or 5: Single Group
+  const mode = state.tournamentMode || 'GROUPS';
+
+  if (mode === 'LEAGUE') {
+    return {
+      type: 'LEAGUE',
+      groups: [{ id: 'ALL', name: `Gesamttabelle (${N} Teams)`, teams: state.teams }],
+      desc: `🔄 Modus Jeder gegen Jeden &bull; Alle ${N} Teams in 1 Tabelle &bull; Voll ausgelastete Körbe &bull; Tabellenerster wird Turniersieger`
+    };
+  }
+
+  if (mode === 'KNOCKOUT') {
+    return {
+      type: 'KNOCKOUT',
+      groups: [{ id: 'KO', name: `K.o.-Turnierbaum (${N} Teams)`, teams: state.teams }],
+      desc: `⚡ Reiner K.o.-Turnierbaum &bull; ${N} Teams &bull; Viertelfinals, Halbfinals, Finale & Platzierungsspiele`
+    };
+  }
+
+  // mode === 'GROUPS'
   if (N <= 5) {
     return {
       type: 'SINGLE_GROUP',
-      groups: [{ id: 'A', name: 'Gesamtgruppe', teams: state.teams }],
-      desc: `${N} Teams in 1 Gruppe (Jeder gegen jeden) &bull; Danach Finale & Platzierungsspiele &bull; Korb 1–${Math.min(4, Math.floor(N/2))}`
+      groups: [{ id: 'A', name: `Gesamtgruppe (${N} Teams)`, teams: state.teams }],
+      desc: `🏆 ${N} Teams in 1 Gruppe (Jeder gegen jeden) &bull; Danach Großes Finale & Spiel um Platz 3`
     };
   }
-  // If 6 to 12: Two Groups (A & B)
+
   const nA = Math.ceil(N / 2);
   const grpA = state.teams.slice(0, nA);
   const grpB = state.teams.slice(nA);
@@ -741,28 +1106,32 @@ function getTournamentStructure() {
       { id: 'A', name: `Gruppe A (${grpA.length} Teams)`, teams: grpA },
       { id: 'B', name: `Gruppe B (${grpB.length} Teams)`, teams: grpB }
     ],
-    desc: `${N} Teams in 2 Gruppen (${grpA.length} &bull; ${grpB.length}) &bull; Alle 4 Körbe voll ausgelastet &bull; Halbfinals & Platzierungsspiele`
+    desc: `🏆 ${N} Teams in 2 Gruppen (${grpA.length} in A &bull; ${grpB.length} in B) &bull; Vorrunde auf 4 Körben &bull; Halbfinals & Platzierungsspiele`
   };
 }
 
-// Standard Berger / round-robin pairing algorithm
+// Standard Berger / round-robin pairing algorithm with Bye detection
 function generateRoundRobin(teams) {
   const list = [...teams];
-  if (list.length % 2 === 1) {
-    list.push(null); // Bye
+  const hasBye = (list.length % 2 === 1);
+  if (hasBye) {
+    list.push(null);
   }
   const n = list.length;
   const rounds = [];
   for (let r = 0; r < n - 1; r++) {
     const roundMatches = [];
+    let byeTeam = null;
     for (let i = 0; i < n / 2; i++) {
       const t1 = list[i];
       const t2 = list[n - 1 - i];
       if (t1 && t2) {
         roundMatches.push({ t1: t1.id, t2: t2.id });
+      } else {
+        byeTeam = (t1 || t2);
       }
     }
-    // Rotate
+    roundMatches.byeTeam = byeTeam;
     list.splice(1, 0, list.pop());
     rounds.push(roundMatches);
   }
@@ -772,26 +1141,28 @@ function generateRoundRobin(teams) {
 function getAllGroupMatches() {
   const structure = getTournamentStructure();
   const schedule = [];
-  
-  if (structure.type === 'SINGLE_GROUP') {
-    const rounds = generateRoundRobin(structure.groups[0].teams);
+
+  if (structure.type === 'LEAGUE' || structure.type === 'SINGLE_GROUP') {
+    const grp = structure.groups[0];
+    const rounds = generateRoundRobin(grp.teams);
     rounds.forEach((rMatches, rIdx) => {
       const roundName = `Runde ${rIdx + 1}`;
-      const timeStr = `${rIdx * 12}:00 - ${rIdx * 12 + 10} Min`;
+      const timeStr = `Runde ${rIdx + 1} (7-8 Min)`;
+      const byeInfo = rMatches.byeTeam ? `Spielfrei in dieser Runde: ${getTeamById(rMatches.byeTeam.id)?.name || 'Team'}` : null;
       rMatches.forEach((m, mIdx) => {
         schedule.push({
           id: `grp_m_${rIdx}_${mIdx}`,
           round: roundName,
           time: timeStr,
           court: `Korb ${mIdx + 1}`,
-          grpId: 'A',
+          grpId: grp.id,
           t1: m.t1,
-          t2: m.t2
+          t2: m.t2,
+          byeInfo: mIdx === 0 ? byeInfo : null
         });
       });
     });
-  } else {
-    // Two groups: combine their rounds
+  } else if (structure.type === 'TWO_GROUPS') {
     const rA = generateRoundRobin(structure.groups[0].teams);
     const rB = generateRoundRobin(structure.groups[1].teams);
     const maxRounds = Math.max(rA.length, rB.length);
@@ -802,7 +1173,10 @@ function getAllGroupMatches() {
       const mA = rA[r] || [];
       const mB = rB[r] || [];
 
-      // Schedule mA on Courts 1 & 2, mB on Courts 3 & 4
+      const byeA = mA.byeTeam ? `Gruppe A: ${getTeamById(mA.byeTeam.id)?.name} hat spielfrei` : null;
+      const byeB = mB.byeTeam ? `Gruppe B: ${getTeamById(mB.byeTeam.id)?.name} hat spielfrei` : null;
+      const combinedBye = [byeA, byeB].filter(Boolean).join(' • ');
+
       let courtIdx = 1;
       mA.forEach((m, idx) => {
         schedule.push({
@@ -812,7 +1186,8 @@ function getAllGroupMatches() {
           court: `Korb ${courtIdx++}`,
           grpId: 'A',
           t1: m.t1,
-          t2: m.t2
+          t2: m.t2,
+          byeInfo: (idx === 0 && combinedBye) ? combinedBye : null
         });
       });
       mB.forEach((m, idx) => {
@@ -823,56 +1198,103 @@ function getAllGroupMatches() {
           court: `Korb ${courtIdx++}`,
           grpId: 'B',
           t1: m.t1,
-          t2: m.t2
+          t2: m.t2,
+          byeInfo: (mA.length === 0 && idx === 0 && combinedBye) ? combinedBye : null
+        });
+      });
+    }
+  } else if (structure.type === 'KNOCKOUT') {
+    // Knockout mode schedule: VF -> HF & PHF -> Finale & Platzierungen
+    const N = state.teams.length;
+    const t = state.teams;
+    if (N >= 8) {
+      // 4 Quarterfinals
+      const vf = [
+        { id: 'ko_vf1', t1: t[0]?.id, t2: t[7]?.id, court: 'Korb 1', name: 'Viertelfinale 1', sub: '1 vs 8' },
+        { id: 'ko_vf2', t1: t[3]?.id, t2: t[4]?.id, court: 'Korb 2', name: 'Viertelfinale 2', sub: '4 vs 5' },
+        { id: 'ko_vf3', t1: t[1]?.id, t2: t[6]?.id, court: 'Korb 3', name: 'Viertelfinale 3', sub: '2 vs 7' },
+        { id: 'ko_vf4', t1: t[2]?.id, t2: t[5]?.id, court: 'Korb 4', name: 'Viertelfinale 4', sub: '3 vs 6' }
+      ];
+      vf.forEach((m, i) => {
+        schedule.push({
+          id: m.id,
+          round: 'Runde 1: Viertelfinale',
+          time: 'Runde 1 (10 Min)',
+          court: m.court,
+          grpId: 'KO',
+          t1: m.t1,
+          t2: m.t2,
+          customTitle: m.name,
+          customSub: m.sub
+        });
+      });
+    } else {
+      // 4 to 7 teams: Halbfinals
+      const hf = [
+        { id: 'ko_hf1', t1: t[0]?.id, t2: t[3]?.id || t[2]?.id, court: 'Korb 1', name: 'Halbfinale 1' },
+        { id: 'ko_hf2', t1: t[1]?.id, t2: t[2]?.id || t[1]?.id, court: 'Korb 2', name: 'Halbfinale 2' }
+      ];
+      hf.forEach((m, i) => {
+        schedule.push({
+          id: m.id,
+          round: 'Runde 1: Halbfinale',
+          time: 'Runde 1 (10 Min)',
+          court: m.court,
+          grpId: 'KO',
+          t1: m.t1,
+          t2: m.t2,
+          customTitle: m.name
         });
       });
     }
   }
+
   return schedule;
 }
 
-/* ====================================================
-   TEAM COUNT SELECTOR & MANAGEMENT
-   ==================================================== */
 function renderTeamCountButtons() {
   const container = document.getElementById('count-buttons-container');
+  if (!container) return;
   container.innerHTML = '';
   const currentCount = state.teams.length;
-  document.getElementById('tab-team-count').textContent = currentCount;
-
-  for (let c = 4; c <= 12; c++) {
+  for (let i = 4; i <= 12; i++) {
     const btn = document.createElement('button');
-    btn.className = `count-pill ${c === currentCount ? 'active' : ''}`;
-    btn.textContent = `${c} Teams`;
-    btn.onclick = () => setTeamCount(c);
+    btn.className = 'count-pill' + (i === currentCount ? ' active' : '');
+    btn.textContent = `${i} Teams`;
+    btn.onclick = () => setTeamCount(i);
     container.appendChild(btn);
   }
-
-  const struct = getTournamentStructure();
-  document.getElementById('mode-desc-badge').innerHTML = struct.desc;
+  const badge = document.getElementById('mode-desc-badge');
+  if (badge) {
+    const struct = getTournamentStructure();
+    badge.innerHTML = struct.desc;
+  }
+  const tabCount = document.getElementById('tab-team-count');
+  if (tabCount) tabCount.textContent = currentCount;
 }
 
-function setTeamCount(targetCount) {
-  if (targetCount === state.teams.length) return;
-  
-  if (targetCount > state.teams.length) {
-    // Add teams
-    while (state.teams.length < targetCount) {
-      const nextNum = state.teams.length + 1;
-      const bib = BIB_COLORS[(nextNum - 1) % BIB_COLORS.length];
+function setTeamCount(newCount) {
+  if (newCount === state.teams.length) return;
+  if (!confirm(`Turniergröße auf ${newCount} Teams ändern? (Vorhandene Spielstände werden zurückgesetzt)`)) return;
+
+  const currentCount = state.teams.length;
+  if (newCount > currentCount) {
+    for (let i = currentCount; i < newCount; i++) {
       state.teams.push({
-        id: `T${nextNum}`,
-        name: `Team ${nextNum}`,
-        bib: bib,
-        players: [`Spielerin 1 (${bib})`, `Spielerin 2`, `Spielerin 3`]
+        id: `T${i + 1}`,
+        name: `Team ${i + 1}`,
+        bib: BIB_COLORS[i % BIB_COLORS.length],
+        players: [`Spielerin ${i + 1}.1`, `Spielerin ${i + 1}.2`, `Spielerin ${i + 1}.3`, `Spielerin ${i + 1}.4`]
       });
     }
   } else {
-    // Remove teams
-    state.teams = state.teams.slice(0, targetCount);
+    state.teams = state.teams.slice(0, newCount);
   }
 
+  state.scores = {};
+  state.playoffScores = {};
   saveState();
+  updateModePills();
   renderTeamCountButtons();
   renderTeams();
   renderMatches();
@@ -882,24 +1304,39 @@ function setTeamCount(targetCount) {
 
 function addSingleTeam() {
   if (state.teams.length >= 12) {
-    alert('Maximal 12 Teams werden unterstützt.');
+    alert('Maximal 12 Teams möglich.');
     return;
   }
-  setTeamCount(state.teams.length + 1);
+  const nextIdx = state.teams.length;
+  state.teams.push({
+    id: `T${nextIdx + 1}`,
+    name: `Team ${nextIdx + 1}`,
+    bib: BIB_COLORS[nextIdx % BIB_COLORS.length],
+    players: [`Spielerin ${nextIdx + 1}.1`, `Spielerin ${nextIdx + 1}.2`, `Spielerin ${nextIdx + 1}.3`]
+  });
+  saveState();
+  updateModePills();
+  renderTeamCountButtons();
+  renderTeams();
+  renderMatches();
+  renderStandings();
+  renderPlayoffs();
 }
 
 function removeSpecificTeam(index) {
   if (state.teams.length <= 4) {
-    alert('Mindestens 4 Teams sind für ein sinnvolles Turnier erforderlich.');
+    alert('Mindestens 4 Teams erforderlich.');
     return;
   }
+  const tName = state.teams[index].name;
+  if (!confirm(`"${tName}" wirklich aus dem Turnier entfernen?`)) return;
   state.teams.splice(index, 1);
-  // Re-index IDs
   state.teams.forEach((t, i) => {
     t.id = `T${i + 1}`;
     if (t.name.startsWith('Team ')) t.name = `Team ${i + 1}`;
   });
   saveState();
+  updateModePills();
   renderTeamCountButtons();
   renderTeams();
   renderMatches();
@@ -913,114 +1350,123 @@ function resetTo8TeamsDefault() {
     state.teams = JSON.parse(JSON.stringify(base));
     state.scores = {};
     state.playoffScores = {};
+    state.tournamentMode = 'GROUPS';
     saveState();
+    updateModePills();
     renderTeamCountButtons();
     renderTeams();
     renderMatches();
     renderStandings();
     renderPlayoffs();
+    alert('Turnier wurde auf die 8 Eisvögel-Teams zurückgesetzt!');
   }
 }
 
 function resetScoresOnly() {
-  if (confirm('Alle eingetragenen Spielergebnisse zurücksetzen? (Teams & Namen bleiben erhalten)')) {
+  if (confirm('Alle eingetragenen Spielstände und Ergebnisse löschen? (Teams und Spielerinnen bleiben erhalten)')) {
     state.scores = {};
     state.playoffScores = {};
     saveState();
     renderMatches();
     renderStandings();
     renderPlayoffs();
+    alert('Alle Spielstände wurden geleert.');
   }
 }
 
-/* ====================================================
-   RENDER TEAMS TAB
-   ==================================================== */
 function renderTeams() {
-  const grid = document.getElementById('teams-grid');
-  grid.innerHTML = '';
+  const container = document.getElementById('teams-grid');
+  if (!container) return;
+  container.innerHTML = '';
 
-  state.teams.forEach((t, tIdx) => {
+  state.teams.forEach((team, tIdx) => {
     const card = document.createElement('div');
     card.className = 'team-card';
+    
+    let playersHtml = '';
+    team.players.forEach((p, pIdx) => {
+      playersHtml += `
+        <div class="player-tag">
+          <input type="text" value="${p}" onchange="updatePlayerName(${tIdx}, ${pIdx}, this.value)" placeholder="Spielerin Name">
+          <button class="player-del-btn" onclick="removePlayer(${tIdx}, ${pIdx})" title="Spielerin entfernen">&times;</button>
+        </div>
+      `;
+    });
 
-    const playersHtml = t.players.map((p, pIdx) => `
-      <div class="player-edit-row">
-        <input class="player-input" type="text" value="${p}" placeholder="Name (Altersklasse)" onchange="updatePlayerName(${tIdx}, ${pIdx}, this.value)">
-        <button class="btn-del-player" title="Spielerin entfernen" onclick="removePlayer(${tIdx}, ${pIdx})">✕</button>
-      </div>
-    `).join('');
+    let bibOptions = '';
+    BIB_COLORS.forEach(c => {
+      bibOptions += `<option value="${c}" ${team.bib === c ? 'selected' : ''}>${c}</option>`;
+    });
 
     card.innerHTML = `
-      <div class="team-card-header">
-        <span class="team-id">${t.id} &bull; ${tIdx < Math.ceil(state.teams.length / 2) ? 'Gruppe A' : 'Gruppe B'}</span>
-        <div class="team-meta">
-          <span class="team-bib">${t.bib}</span>
-          <span class="team-count">${t.players.length} Sp.</span>
+      <div class="team-header">
+        <div style="flex:1;">
+          <div style="font-size:11px; font-weight:800; color:var(--magenta); text-transform:uppercase; margin-bottom:2px;">
+            TEAM ${tIdx + 1}
+          </div>
+          <input class="team-name-input" type="text" value="${team.name}" onchange="updateTeamName(${tIdx}, this.value)" title="Teamname bearbeiten">
         </div>
+        <select class="bib-select" onchange="state.teams[${tIdx}].bib = this.value; saveState(); renderTeams(); renderMatches();">
+          ${bibOptions}
+        </select>
+        <button onclick="removeSpecificTeam(${tIdx})" style="background:none; border:none; color:#EF4444; font-size:16px; cursor:pointer; padding:4px;" title="Team löschen">&times;</button>
       </div>
-      <div class="team-card-actions">
-        <input class="team-name-input" type="text" value="${t.name}" placeholder="Teamname..." onchange="updateTeamName(${tIdx}, this.value)">
-        <button class="btn-card-del-team" title="Team löschen" onclick="removeSpecificTeam(${tIdx})">✕</button>
+      <div class="players-list">
+        ${playersHtml}
       </div>
-      <div class="player-list-container">
-        <div style="font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase;">Spielerinnen:</div>
-        <div>${playersHtml}</div>
-        <button class="btn-add-player" onclick="addPlayer(${tIdx})">+ Spielerin hinzufügen</button>
-      </div>
+      <button class="add-player-btn" onclick="addPlayer(${tIdx})">+ Spielerin hinzufügen</button>
     `;
-    grid.appendChild(card);
+    container.appendChild(card);
   });
 
-  // Add Team Card
-  if (state.teams.length < 12) {
-    const addBox = document.createElement('div');
-    addBox.className = 'add-team-btn-box';
-    addBox.onclick = addSingleTeam;
-    addBox.innerHTML = `
-      <div class="add-team-inner">
-        <span>+</span>
-        Neues Team hinzufügen<br/>
-        <small style="color:var(--muted); font-weight:normal;">(Bis zu 12 Teams)</small>
-      </div>
-    `;
-    grid.appendChild(addBox);
-  }
+  const addCard = document.createElement('div');
+  addCard.className = 'team-card add-team-card';
+  addCard.style.display = 'flex';
+  addCard.style.flexDirection = 'column';
+  addCard.style.alignItems = 'center';
+  addCard.style.justifyContent = 'center';
+  addCard.style.minHeight = '180px';
+  addCard.style.border = '2px dashed var(--border)';
+  addCard.style.cursor = 'pointer';
+  addCard.onclick = addSingleTeam;
+  addCard.innerHTML = `
+    <div style="font-size:32px; color:var(--magenta); margin-bottom:6px;">+</div>
+    <div style="font-weight:800; color:var(--midnight); font-size:14px;">Weiteres Team hinzufügen</div>
+    <div style="font-size:12px; color:var(--muted); margin-top:2px;">(Aktuell ${state.teams.length} Teams)</div>
+  `;
+  container.appendChild(addCard);
 }
 
-function updateTeamName(tIdx, newName) {
-  state.teams[tIdx].name = newName || state.teams[tIdx].id;
+function updateTeamName(idx, val) {
+  state.teams[idx].name = val.trim() || `Team ${idx + 1}`;
   saveState();
   renderMatches();
   renderStandings();
   renderPlayoffs();
 }
 
-function updatePlayerName(tIdx, pIdx, newName) {
-  if (newName.trim() === '') {
-    removePlayer(tIdx, pIdx);
-    return;
-  }
-  state.teams[tIdx].players[pIdx] = newName.trim();
+function updatePlayerName(tIdx, pIdx, val) {
+  state.teams[tIdx].players[pIdx] = val.trim() || `Spielerin ${pIdx + 1}`;
   saveState();
-  renderTeams();
 }
 
 function addPlayer(tIdx) {
-  state.teams[tIdx].players.push('Neue Spielerin (U14)');
+  const pCount = state.teams[tIdx].players.length + 1;
+  state.teams[tIdx].players.push(`Spielerin ${tIdx + 1}.${pCount}`);
   saveState();
   renderTeams();
 }
 
 function removePlayer(tIdx, pIdx) {
+  if (state.teams[tIdx].players.length <= 1) {
+    alert('Ein Team muss mindestens 1 Spielerin haben.');
+    return;
+  }
   state.teams[tIdx].players.splice(pIdx, 1);
   saveState();
   renderTeams();
 }
 
-/* ====================================================
-   MATCHES & SCORING
-   ==================================================== */
 function getTeamById(id) {
   return state.teams.find(t => t.id === id) || { id, name: id };
 }
@@ -1042,6 +1488,7 @@ function setScore(matchId, teamKey, val) {
 
 function renderMatches() {
   const container = document.getElementById('matches-list');
+  if (!container) return;
   container.innerHTML = '';
   const matches = getAllGroupMatches();
 
@@ -1058,15 +1505,25 @@ function renderMatches() {
     const rMatches = byRound[rName];
     box.innerHTML = `<div class="round-header"><span>${rName}</span><span>${rMatches.length} Spiele parallel</span></div>`;
 
+    const byeMatch = rMatches.find(m => m.byeInfo);
+    if (byeMatch && byeMatch.byeInfo) {
+      const byeBanner = document.createElement('div');
+      byeBanner.className = 'bye-banner';
+      byeBanner.innerHTML = `<span>ℹ️</span> <span>${byeMatch.byeInfo}</span>`;
+      box.appendChild(byeBanner);
+    }
+
     rMatches.forEach(m => {
       const s = state.scores[m.id] || { s1: '', s2: '' };
-      const t1 = getTeamById(m.t1);
-      const t2 = getTeamById(m.t2);
+      const t1 = getTeamById(m.t1) || { name: m.t1 || 'Team A' };
+      const t2 = getTeamById(m.t2) || { name: m.t2 || 'Team B' };
+
+      const courtTitle = m.customTitle ? `${m.court} &bull; ${m.customTitle}` : m.court;
 
       const row = document.createElement('div');
       row.className = 'match-row';
       row.innerHTML = `
-        <div class="match-court"><b>${m.court}</b></div>
+        <div class="match-court"><b>${courtTitle}</b></div>
         <div class="team-label home" title="${t1.name}">${t1.name}</div>
         <div class="score-control">
           <div class="team-score-stepper">
@@ -1085,13 +1542,11 @@ function renderMatches() {
       `;
       box.appendChild(row);
     });
+
     container.appendChild(box);
   });
 }
 
-/* ====================================================
-   STANDINGS
-   ==================================================== */
 function calculateGroupStandings(groupTeams) {
   const stats = {};
   groupTeams.forEach(t => {
@@ -1182,14 +1637,81 @@ function renderPlayoffs() {
   const structure = getTournamentStructure();
   const c4 = document.getElementById('playoffs-r4-list');
   const c5 = document.getElementById('playoffs-r5-list');
+  if (!c4 || !c5) return;
   c4.innerHTML = '';
   c5.innerHTML = '';
+
+  const r5Card = document.getElementById('bracket-r5-card');
+  const champBox = document.getElementById('champion-banner-box');
+
+  if (structure.type === 'LEAGUE') {
+    // League mode: Podium + Finale der beiden Tabellenführer
+    const std = calculateGroupStandings(structure.groups[0].teams);
+    document.getElementById('r4-card-title').textContent = '🏆 Meisterschafts-Entscheidung & Platzierungsspiele';
+    if (r5Card) r5Card.style.display = 'none';
+
+    const t1 = std[0] ? std[0].name : '1. Tabelle';
+    const t2 = std[1] ? std[1].name : '2. Tabelle';
+    const t3 = std[2] ? std[2].name : '3. Tabelle';
+    const t4 = std[3] ? std[3].name : '4. Tabelle';
+
+    const matches = [
+      { id: 'lg_fin', court: 'Korb 1', title: '🏆 GROSSES MEISTERSCHAFTS-FINALE', sub: '1. Tabelle vs. 2. Tabelle', t1, t2, isFinal: true },
+      { id: 'lg_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: '3. Tabelle vs. 4. Tabelle', t1: t3, t2: t4 },
+    ];
+
+    matches.forEach(m => {
+      const sc = state.playoffScores[m.id] || { s1: '', s2: '' };
+      const card = document.createElement('div');
+      card.className = 'playoff-match-card' + (m.isFinal ? ' final-highlight' : '');
+      card.innerHTML = `
+        <div class="playoff-match-header">
+          <div class="playoff-title-text">
+            <span>${m.title}</span>
+            <span class="playoff-qual-info">(${m.sub})</span>
+          </div>
+          <span class="playoff-court-badge">${m.court}</span>
+        </div>
+        <div class="playoff-match-row">
+          <div class="team-label home" title="${m.t1}">${m.t1}</div>
+          <div class="score-control">
+            <div class="team-score-stepper">
+              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', -1)">−</button>
+              <input class="score-input" type="number" min="0" value="${sc.s1 !== '' ? sc.s1 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's1', this.value)">
+              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', 1)">+</button>
+            </div>
+            <span class="score-colon">:</span>
+            <div class="team-score-stepper">
+              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', -1)">−</button>
+              <input class="score-input" type="number" min="0" value="${sc.s2 !== '' ? sc.s2 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's2', this.value)">
+              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', 1)">+</button>
+            </div>
+          </div>
+          <div class="team-label away" title="${m.t2}">${m.t2}</div>
+        </div>
+      `;
+      c4.appendChild(card);
+    });
+
+    const finSc = state.playoffScores['lg_fin'];
+    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? t1 : t2;
+      document.getElementById('champ-team-name').textContent = winner;
+      champBox.style.display = 'block';
+    } else if (std[0] && std[0].sp > 0 && champBox) {
+      document.getElementById('champ-team-name').textContent = std[0].name + ' (Tabellenführer)';
+      champBox.style.display = 'block';
+    } else if (champBox) {
+      champBox.style.display = 'none';
+    }
+    return;
+  }
 
   if (structure.type === 'SINGLE_GROUP') {
     // 4 or 5 teams
     const std = calculateGroupStandings(structure.groups[0].teams);
     document.getElementById('r4-card-title').textContent = 'Platzierungs- & Finalspiele';
-    document.getElementById('bracket-r5-card').style.display = 'none';
+    if (r5Card) r5Card.style.display = 'none';
 
     const t1 = std[0] ? std[0].name : '1. Vorrunde';
     const t2 = std[1] ? std[1].name : '2. Vorrunde';
@@ -1234,51 +1756,55 @@ function renderPlayoffs() {
       c4.appendChild(card);
     });
 
-    // Champion
-    const sc = state.playoffScores['p_fin'];
-    const champBox = document.getElementById('champion-box');
-    const champName = document.getElementById('champion-name');
-    if (sc && sc.s1 !== '' && sc.s2 !== '' && sc.s1 !== sc.s2) {
-      champName.textContent = parseInt(sc.s1) > parseInt(sc.s2) ? t1 : t2;
+    const finSc = state.playoffScores['p_fin'];
+    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? t1 : t2;
+      document.getElementById('champ-team-name').textContent = winner;
       champBox.style.display = 'block';
-    } else {
+    } else if (champBox) {
       champBox.style.display = 'none';
     }
     return;
   }
 
-  // TWO GROUPS (6 to 12 Teams)
-  document.getElementById('bracket-r5-card').style.display = 'block';
+  // TWO GROUPS (6 to 12 Teams) or KNOCKOUT
+  if (r5Card) r5Card.style.display = 'block';
   document.getElementById('r4-card-title').textContent = 'Runde 4: Halbfinals & Platzierungs-Halbfinals';
   document.getElementById('r5-card-title').textContent = 'Runde 5: Großes Finale & Platzierungsspiele';
 
   const stdA = calculateGroupStandings(structure.groups[0].teams);
-  const stdB = calculateGroupStandings(structure.groups[1].teams);
+  const stdB = calculateGroupStandings(structure.groups[1] ? structure.groups[1].teams : []);
 
-  const getTeamName = (grpList, rankIdx) => grpList[rankIdx] ? grpList[rankIdx].name : `${rankIdx + 1}. Gruppe`;
+  const getTeamName = (grpList, rankIdx, fallback) => grpList && grpList[rankIdx] ? grpList[rankIdx].name : (fallback || `${rankIdx + 1}. Gruppe`);
 
   // Semifinals (1st vs 2nd)
-  const hf1_t1 = getTeamName(stdA, 0);
-  const hf1_t2 = getTeamName(stdB, 1);
-  const hf2_t1 = getTeamName(stdB, 0);
-  const hf2_t2 = getTeamName(stdA, 1);
-
-  // Placement Semifinals (3rd vs 4th)
-  const phf1_t1 = getTeamName(stdA, 2);
-  const phf1_t2 = getTeamName(stdB, 3);
-  const phf2_t1 = getTeamName(stdB, 2);
-  const phf2_t2 = getTeamName(stdA, 3);
+  const hf1_t1 = getTeamName(stdA, 0, '1. Gruppe A');
+  const hf1_t2 = getTeamName(stdB, 1, '2. Gruppe B');
+  const hf2_t1 = getTeamName(stdB, 0, '1. Gruppe B');
+  const hf2_t2 = getTeamName(stdA, 1, '2. Gruppe A');
 
   const r4Matches = [
     { id: 'hf1', court: 'Korb 1', title: '🏀 HALBFINALE 1', sub: '1. Gruppe A vs. 2. Gruppe B', t1: hf1_t1, t2: hf1_t2 },
     { id: 'hf2', court: 'Korb 2', title: '🏀 HALBFINALE 2', sub: '1. Gruppe B vs. 2. Gruppe A', t1: hf2_t1, t2: hf2_t2 },
-    { id: 'phf1', court: 'Korb 3', title: 'PLATZIERUNGS-HALBFINALE 1', sub: '3. Gruppe A vs. 4. Gruppe B (um Plätze 5–8)', t1: phf1_t1, t2: phf1_t2 },
-    { id: 'phf2', court: 'Korb 4', title: 'PLATZIERUNGS-HALBFINALE 2', sub: '3. Gruppe B vs. 4. Gruppe A (um Plätze 5–8)', t1: phf2_t1, t2: phf2_t2 },
   ];
 
-  if (stdA.length >= 5 || stdB.length >= 5) {
-    const p9_t1 = getTeamName(stdA, 4);
-    const p9_t2 = getTeamName(stdB, 4);
+  // Placement Semifinals
+  const hasEnoughForPhf = (stdA.length >= 4 && stdB.length >= 4);
+  const hasDirectP5 = (stdA.length >= 3 && stdB.length >= 3 && !hasEnoughForPhf);
+
+  if (hasEnoughForPhf) {
+    const phf1_t1 = getTeamName(stdA, 2, '3. Gruppe A');
+    const phf1_t2 = getTeamName(stdB, 3, '4. Gruppe B');
+    const phf2_t1 = getTeamName(stdB, 2, '3. Gruppe B');
+    const phf2_t2 = getTeamName(stdA, 3, '4. Gruppe A');
+
+    r4Matches.push({ id: 'phf1', court: 'Korb 3', title: 'PLATZIERUNGS-HALBFINALE 1', sub: '3. Gruppe A vs. 4. Gruppe B (um Plätze 5–8)', t1: phf1_t1, t2: phf1_t2 });
+    r4Matches.push({ id: 'phf2', court: 'Korb 4', title: 'PLATZIERUNGS-HALBFINALE 2', sub: '3. Gruppe B vs. 4. Gruppe A (um Plätze 5–8)', t1: phf2_t1, t2: phf2_t2 });
+  }
+
+  if (stdA.length >= 5 && stdB.length >= 5) {
+    const p9_t1 = getTeamName(stdA, 4, '5. Gruppe A');
+    const p9_t2 = getTeamName(stdB, 4, '5. Gruppe B');
     r4Matches.push({ id: 'p9', court: 'Korb 1', title: 'SPIEL UM PLATZ 9 & 10', sub: '5. Gruppe A vs. 5. Gruppe B', t1: p9_t1, t2: p9_t2 });
   }
 
@@ -1315,29 +1841,30 @@ function renderPlayoffs() {
     c4.appendChild(card);
   });
 
-  function getWinLose(mId, t1, t2) {
-    const s = state.playoffScores[mId];
-    if (s && s.s1 !== '' && s.s2 !== '' && s.s1 !== undefined && s.s2 !== undefined) {
-      const n1 = parseInt(s.s1) || 0;
-      const n2 = parseInt(s.s2) || 0;
-      if (n1 > n2) return { w: t1, l: t2 };
-      if (n2 > n1) return { w: t2, l: t1 };
-    }
-    return { w: 'Sieger ' + mId.toUpperCase(), l: 'Verlierer ' + mId.toUpperCase() };
-  }
+  // Calculate Finals
+  const hf1Res = getWinLose(state.playoffScores['hf1'], hf1_t1, hf1_t2);
+  const hf2Res = getWinLose(state.playoffScores['hf2'], hf2_t1, hf2_t2);
 
-  const hf1Res = getWinLose('hf1', hf1_t1, hf1_t2);
-  const hf2Res = getWinLose('hf2', hf2_t1, hf2_t2);
-  const phf1Res = getWinLose('phf1', phf1_t1, phf1_t2);
-  const phf2Res = getWinLose('phf2', phf2_t1, phf2_t2);
-
-  // Finals
   const r5Matches = [
     { id: 'final', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; SPIEL UM PLATZ 1 & 2', sub: 'Sieger Halbfinale 1 vs. Sieger Halbfinale 2', t1: hf1Res.w, t2: hf2Res.w, isFinal: true },
     { id: 'p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: 'Verlierer Halbfinale 1 vs. Verlierer Halbfinale 2', t1: hf1Res.l, t2: hf2Res.l },
-    { id: 'p5', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: 'Sieger Platzierungs-HF 1 vs. Sieger Platzierungs-HF 2', t1: phf1Res.w, t2: phf2Res.w },
-    { id: 'p7', court: 'Korb 4', title: '🎖 SPIEL UM PLATZ 7 & 8', sub: 'Verlierer Platzierungs-HF 1 vs. Verlierer Platzierungs-HF 2', t1: phf1Res.l, t2: phf2Res.l },
   ];
+
+  if (hasEnoughForPhf) {
+    const phf1_t1 = getTeamName(stdA, 2, '3. Gruppe A');
+    const phf1_t2 = getTeamName(stdB, 3, '4. Gruppe B');
+    const phf2_t1 = getTeamName(stdB, 2, '3. Gruppe B');
+    const phf2_t2 = getTeamName(stdA, 3, '4. Gruppe A');
+    const phf1Res = getWinLose(state.playoffScores['phf1'], phf1_t1, phf1_t2);
+    const phf2Res = getWinLose(state.playoffScores['phf2'], phf2_t1, phf2_t2);
+
+    r5Matches.push({ id: 'p5', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: 'Sieger Platzierungs-HF 1 vs. Sieger Platzierungs-HF 2', t1: phf1Res.w, t2: phf2Res.w });
+    r5Matches.push({ id: 'p7', court: 'Korb 4', title: '🎖 SPIEL UM PLATZ 7 & 8', sub: 'Verlierer Platzierungs-HF 1 vs. Verlierer Platzierungs-HF 2', t1: phf1Res.l, t2: phf2Res.l });
+  } else if (hasDirectP5) {
+    const p5_t1 = getTeamName(stdA, 2, '3. Gruppe A');
+    const p5_t2 = getTeamName(stdB, 2, '3. Gruppe B');
+    r5Matches.push({ id: 'p5_direct', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: '3. Gruppe A vs. 3. Gruppe B', t1: p5_t1, t2: p5_t2 });
+  }
 
   r5Matches.forEach(m => {
     const sc = state.playoffScores[m.id] || { s1: '', s2: '' };
@@ -1372,17 +1899,25 @@ function renderPlayoffs() {
     c5.appendChild(card);
   });
 
-  // Champion
   const finSc = state.playoffScores['final'];
-  const champBox = document.getElementById('champion-box');
-  const champName = document.getElementById('champion-name');
-  if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2) {
-    const winner = (parseInt(finSc.s1)||0) > (parseInt(finSc.s2)||0) ? hf1Res.w : hf2Res.w;
-    champName.textContent = winner;
+  if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+    const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? hf1Res.w : hf2Res.w;
+    document.getElementById('champ-team-name').textContent = winner;
     champBox.style.display = 'block';
-  } else {
+  } else if (champBox) {
     champBox.style.display = 'none';
   }
+}
+
+function getWinLose(scOrId, defaultT1, defaultT2) {
+  const sc = (typeof scOrId === "string") ? state.playoffScores[scOrId] : scOrId;
+  if (sc && sc.s1 !== "" && sc.s2 !== "" && sc.s1 !== undefined && sc.s2 !== undefined) {
+    const n1 = parseInt(sc.s1) || 0;
+    const n2 = parseInt(sc.s2) || 0;
+    if (n1 > n2) return { w: defaultT1, l: defaultT2 };
+    if (n2 > n1) return { w: defaultT2, l: defaultT1 };
+  }
+  return { w: "Sieger (" + defaultT1 + ")", l: "Verlierer (" + defaultT1 + ")" };
 }
 
 // Initial load
@@ -1392,6 +1927,40 @@ renderMatches();
 renderStandings();
 renderPlayoffs();
 </script>
+
+
+<!-- IMPORT MODAL -->
+<div id="import-modal" class="modal-overlay">
+  <div class="modal-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div style="font-size:18px; font-weight:800; color:var(--midnight);">📥 Teams & Kader importieren</div>
+      <button onclick="closeImportModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted);">&times;</button>
+    </div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.4;">
+      Lade eine Datei (<strong>.json</strong> oder <strong>.csv</strong>) hoch oder füge Teamzeilen direkt aus Excel / Text ein:
+    </div>
+
+    <!-- File selector -->
+    <div style="margin-bottom:16px;">
+      <label style="display:block; font-size:12px; font-weight:700; color:var(--midnight); margin-bottom:6px;">1. Datei auswählen (JSON / CSV):</label>
+      <input type="file" id="kader-file-input" accept=".json,.csv,.txt" style="font-size:13px; width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:#F8FAFC;">
+    </div>
+
+    <!-- Or text paste -->
+    <div style="margin-bottom:16px;">
+      <label style="display:block; font-size:12px; font-weight:700; color:var(--midnight); margin-bottom:6px;">2. Oder Textzeilen hier einfügen:</label>
+      <textarea id="kader-paste-input" rows="6" placeholder="Team 1; Rot; Spielerin A; Spielerin B; Spielerin C&#10;Team 2; Blau; Spielerin D; Spielerin E; Spielerin F..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:monospace; font-size:12px; outline:none; resize:vertical;"></textarea>
+      <div style="font-size:11px; color:#64748B; margin-top:4px;">Format: Teamname; Trikotfarbe; Spielerin 1; Spielerin 2; ... (Semikolon oder Komma getrennt)</div>
+    </div>
+
+    <div id="import-status-msg" style="display:none; font-size:13px; font-weight:700; padding:10px; border-radius:8px; margin-bottom:14px;"></div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button onclick="closeImportModal()" style="padding:10px 16px; border:1px solid var(--border); background:#F1F5F9; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">Abbrechen</button>
+      <button onclick="processKaderImport()" style="padding:10px 18px; border:none; background:var(--midnight); color:white; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer;">Kader übernehmen & neu berechnen</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Team 1",
+    "bib": "Rot",
+    "players": ["Spielerin A", "Spielerin B", "Spielerin C", "Spielerin D"]
+  },
+  {
+    "name": "Team 2",
+    "bib": "Blau",
+    "players": ["Spielerin E", "Spielerin F", "Spielerin G", "Spielerin H"]
+  },
+  {
+    "name": "Team 3",
+    "bib": "Grün",
+    "players": ["Spielerin I", "Spielerin J", "Spielerin K"]
+  },
+  {
+    "name": "Team 4",
+    "bib": "Gelb",
+    "players": ["Spielerin L", "Spielerin M", "Spielerin N", "Spielerin O"]
+  }
+]
