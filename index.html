@@ -1916,232 +1916,38 @@ function renderPlayoffs() {
   c4.innerHTML = '';
   c5.innerHTML = '';
 
+  const r4CardTitle = document.getElementById('r4-card-title');
   const r5Card = document.getElementById('bracket-r5-card');
+  const r5CardTitle = document.getElementById('r5-card-title');
   const champBox = document.getElementById('champion-banner-box');
 
-  if (structure.type === 'LEAGUE') {
-    // League mode: Podium + Finale der beiden Tabellenführer
-    const std = calculateGroupStandings(structure.groups[0].teams);
-    document.getElementById('r4-card-title').textContent = '🏆 Meisterschafts-Entscheidung & Platzierungsspiele';
-    if (r5Card) r5Card.style.display = 'none';
-
-    const t1 = std[0] ? std[0].name : '1. Tabelle';
-    const t2 = std[1] ? std[1].name : '2. Tabelle';
-    const t3 = std[2] ? std[2].name : '3. Tabelle';
-    const t4 = std[3] ? std[3].name : '4. Tabelle';
-
-    const matches = [
-      { id: 'lg_fin', court: 'Korb 1', title: '🏆 GROSSES MEISTERSCHAFTS-FINALE', sub: '1. Tabelle vs. 2. Tabelle', t1, t2, isFinal: true },
-      { id: 'lg_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: '3. Tabelle vs. 4. Tabelle', t1: t3, t2: t4 },
-    ];
-
-    matches.forEach(m => {
-      const sc = state.playoffScores[m.id] || { s1: '', s2: '' };
-      const card = document.createElement('div');
-      card.className = 'playoff-match-card' + (m.isFinal ? ' final-highlight' : '');
-      card.innerHTML = `
-        <div class="playoff-match-header">
-          <div class="playoff-title-text">
-            <span>${m.title}</span>
-            <span class="playoff-qual-info">(${m.sub})</span>
-          </div>
-          <span class="playoff-court-badge">${m.court}</span>
-        </div>
-        <div class="playoff-match-row">
-          <div class="team-label home" title="${m.t1}">${m.t1}</div>
-          <div class="score-control">
-            <div class="team-score-stepper">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', -1)">−</button>
-              <input class="score-input" type="number" min="0" value="${sc.s1 !== '' ? sc.s1 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's1', this.value)">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', 1)">+</button>
-            </div>
-            <span class="score-colon">:</span>
-            <div class="team-score-stepper">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', -1)">−</button>
-              <input class="score-input" type="number" min="0" value="${sc.s2 !== '' ? sc.s2 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's2', this.value)">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', 1)">+</button>
-            </div>
-          </div>
-          <div class="team-label away" title="${m.t2}">${m.t2}</div>
-        </div>
-      `;
-      c4.appendChild(card);
-    });
-
-    const finSc = state.playoffScores['lg_fin'];
-    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
-      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? t1 : t2;
-      document.getElementById('champ-team-name').textContent = winner;
-      champBox.style.display = 'block';
-    } else if (std[0] && std[0].sp > 0 && champBox) {
-      document.getElementById('champ-team-name').textContent = std[0].name + ' (Tabellenführer)';
-      champBox.style.display = 'block';
-    } else if (champBox) {
-      champBox.style.display = 'none';
-    }
-    return;
-  }
-
-  if (structure.type === 'SINGLE_GROUP') {
-    // 4 or 5 teams
-    const std = calculateGroupStandings(structure.groups[0].teams);
-    document.getElementById('r4-card-title').textContent = 'Platzierungs- & Finalspiele';
-    if (r5Card) r5Card.style.display = 'none';
-
-    const t1 = std[0] ? std[0].name : '1. Vorrunde';
-    const t2 = std[1] ? std[1].name : '2. Vorrunde';
-    const t3 = std[2] ? std[2].name : '3. Vorrunde';
-    const t4 = std[3] ? std[3].name : '4. Vorrunde';
-
-    const matches = [
-      { id: 'p_fin', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; SPIEL UM PLATZ 1 & 2', sub: '1. Vorrunde vs. 2. Vorrunde', t1, t2, isFinal: true },
-      { id: 'p_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: '3. Vorrunde vs. 4. Vorrunde', t1: t3, t2: t4 },
-    ];
-
-    matches.forEach(m => {
-      const sc = state.playoffScores[m.id] || { s1: '', s2: '' };
-      const card = document.createElement('div');
-      card.className = 'playoff-match-card' + (m.isFinal ? ' final-highlight' : '');
-      card.innerHTML = `
-        <div class="playoff-match-header">
-          <div class="playoff-title-text">
-            <span>${m.title}</span>
-            <span class="playoff-qual-info">(${m.sub})</span>
-          </div>
-          <span class="playoff-court-badge">${m.court}</span>
-        </div>
-        <div class="playoff-match-row">
-          <div class="team-label home" title="${m.t1}">${m.t1}</div>
-          <div class="score-control">
-            <div class="team-score-stepper">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', -1)">−</button>
-              <input class="score-input" type="number" min="0" value="${sc.s1 !== '' ? sc.s1 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's1', this.value)">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', 1)">+</button>
-            </div>
-            <span class="score-colon">:</span>
-            <div class="team-score-stepper">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', -1)">−</button>
-              <input class="score-input" type="number" min="0" value="${sc.s2 !== '' ? sc.s2 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's2', this.value)">
-              <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', 1)">+</button>
-            </div>
-          </div>
-          <div class="team-label away" title="${m.t2}">${m.t2}</div>
-        </div>
-      `;
-      c4.appendChild(card);
-    });
-
-    const finSc = state.playoffScores['p_fin'];
-    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
-      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? t1 : t2;
-      document.getElementById('champ-team-name').textContent = winner;
-      champBox.style.display = 'block';
-    } else if (champBox) {
-      champBox.style.display = 'none';
-    }
-    return;
-  }
-
-  // TWO GROUPS (6 to 12 Teams) or KNOCKOUT
-  if (r5Card) r5Card.style.display = 'block';
-  document.getElementById('r4-card-title').textContent = 'Runde 4: Halbfinals & Platzierungs-Halbfinals';
-  document.getElementById('r5-card-title').textContent = 'Runde 5: Großes Finale & Platzierungsspiele';
-
-  const stdA = calculateGroupStandings(structure.groups[0].teams);
-  const stdB = calculateGroupStandings(structure.groups[1] ? structure.groups[1].teams : []);
+  const N = state.teams.length;
+  const mode = state.tournamentMode || 'GROUPS';
 
   const getTeamName = (grpList, rankIdx, fallback) => grpList && grpList[rankIdx] ? grpList[rankIdx].name : (fallback || `${rankIdx + 1}. Gruppe`);
 
-  // Semifinals (1st vs 2nd)
-  const hf1_t1 = getTeamName(stdA, 0, '1. Gruppe A');
-  const hf1_t2 = getTeamName(stdB, 1, '2. Gruppe B');
-  const hf2_t1 = getTeamName(stdB, 0, '1. Gruppe B');
-  const hf2_t2 = getTeamName(stdA, 1, '2. Gruppe A');
-
-  const r4Matches = [
-    { id: 'hf1', court: 'Korb 1', title: '🏀 HALBFINALE 1', sub: '1. Gruppe A vs. 2. Gruppe B', t1: hf1_t1, t2: hf1_t2 },
-    { id: 'hf2', court: 'Korb 2', title: '🏀 HALBFINALE 2', sub: '1. Gruppe B vs. 2. Gruppe A', t1: hf2_t1, t2: hf2_t2 },
-  ];
-
-  // Placement Semifinals
-  const hasEnoughForPhf = (stdA.length >= 4 && stdB.length >= 4);
-  const hasDirectP5 = (stdA.length >= 3 && stdB.length >= 3 && !hasEnoughForPhf);
-
-  if (hasEnoughForPhf) {
-    const phf1_t1 = getTeamName(stdA, 2, '3. Gruppe A');
-    const phf1_t2 = getTeamName(stdB, 3, '4. Gruppe B');
-    const phf2_t1 = getTeamName(stdB, 2, '3. Gruppe B');
-    const phf2_t2 = getTeamName(stdA, 3, '4. Gruppe A');
-
-    r4Matches.push({ id: 'phf1', court: 'Korb 3', title: 'PLATZIERUNGS-HALBFINALE 1', sub: '3. Gruppe A vs. 4. Gruppe B (um Plätze 5–8)', t1: phf1_t1, t2: phf1_t2 });
-    r4Matches.push({ id: 'phf2', court: 'Korb 4', title: 'PLATZIERUNGS-HALBFINALE 2', sub: '3. Gruppe B vs. 4. Gruppe A (um Plätze 5–8)', t1: phf2_t1, t2: phf2_t2 });
-  }
-
-  if (stdA.length >= 5 && stdB.length >= 5) {
-    const p9_t1 = getTeamName(stdA, 4, '5. Gruppe A');
-    const p9_t2 = getTeamName(stdB, 4, '5. Gruppe B');
-    r4Matches.push({ id: 'p9', court: 'Korb 1', title: 'SPIEL UM PLATZ 9 & 10', sub: '5. Gruppe A vs. 5. Gruppe B', t1: p9_t1, t2: p9_t2 });
-  }
-
-  r4Matches.forEach(m => {
-    const sc = state.playoffScores[m.id] || { s1: '', s2: '' };
-    const card = document.createElement('div');
-    card.className = 'playoff-match-card';
-    card.innerHTML = `
-      <div class="playoff-match-header">
-        <div class="playoff-title-text">
-          <span>${m.title}</span>
-          <span class="playoff-qual-info">(${m.sub})</span>
-        </div>
-        <span class="playoff-court-badge">${m.court}</span>
-      </div>
-      <div class="playoff-match-row">
-        <div class="team-label home" title="${m.t1}">${m.t1}</div>
-        <div class="score-control">
-          <div class="team-score-stepper">
-            <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', -1)">−</button>
-            <input class="score-input" type="number" min="0" value="${sc.s1 !== '' ? sc.s1 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's1', this.value)">
-            <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's1', 1)">+</button>
+  function renderPlayoffCard(m, container) {
+    if (m.isAutoRank) {
+      const card = document.createElement('div');
+      card.className = 'playoff-match-card';
+      card.style.background = '#F8FAFC';
+      card.style.borderLeft = '4px solid #3B82F6';
+      card.innerHTML = `
+        <div class="playoff-match-header" style="margin-bottom:0;">
+          <div class="playoff-title-text">
+            <span>${m.title}</span>
+            <span class="playoff-qual-info">(${m.sub})</span>
           </div>
-          <span class="score-colon">:</span>
-          <div class="team-score-stepper">
-            <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', -1)">−</button>
-            <input class="score-input" type="number" min="0" value="${sc.s2 !== '' ? sc.s2 : ''}" placeholder="0" onchange="setPlayoffScore('${m.id}', 's2', this.value)">
-            <button class="score-btn" onclick="changePlayoffScore('${m.id}', 's2', 1)">+</button>
-          </div>
+          <span class="playoff-court-badge" style="background:#DBEAFE; color:#1D4ED8; font-weight:800;">FESTE PLATZIERUNG</span>
         </div>
-        <div class="team-label away" title="${m.t2}">${m.t2}</div>
-      </div>
-    `;
-    c4.appendChild(card);
-  });
+        <div style="padding: 10px 0 4px 0; font-size: 15px; font-weight: 800; color: var(--midnight);">
+          🏀 ${m.t1}
+        </div>
+      `;
+      container.appendChild(card);
+      return;
+    }
 
-  // Calculate Finals
-  const hf1Res = getWinLose(state.playoffScores['hf1'], hf1_t1, hf1_t2);
-  const hf2Res = getWinLose(state.playoffScores['hf2'], hf2_t1, hf2_t2);
-
-  const r5Matches = [
-    { id: 'final', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; SPIEL UM PLATZ 1 & 2', sub: 'Sieger Halbfinale 1 vs. Sieger Halbfinale 2', t1: hf1Res.w, t2: hf2Res.w, isFinal: true },
-    { id: 'p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: 'Verlierer Halbfinale 1 vs. Verlierer Halbfinale 2', t1: hf1Res.l, t2: hf2Res.l },
-  ];
-
-  if (hasEnoughForPhf) {
-    const phf1_t1 = getTeamName(stdA, 2, '3. Gruppe A');
-    const phf1_t2 = getTeamName(stdB, 3, '4. Gruppe B');
-    const phf2_t1 = getTeamName(stdB, 2, '3. Gruppe B');
-    const phf2_t2 = getTeamName(stdA, 3, '4. Gruppe A');
-    const phf1Res = getWinLose(state.playoffScores['phf1'], phf1_t1, phf1_t2);
-    const phf2Res = getWinLose(state.playoffScores['phf2'], phf2_t1, phf2_t2);
-
-    r5Matches.push({ id: 'p5', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: 'Sieger Platzierungs-HF 1 vs. Sieger Platzierungs-HF 2', t1: phf1Res.w, t2: phf2Res.w });
-    r5Matches.push({ id: 'p7', court: 'Korb 4', title: '🎖 SPIEL UM PLATZ 7 & 8', sub: 'Verlierer Platzierungs-HF 1 vs. Verlierer Platzierungs-HF 2', t1: phf1Res.l, t2: phf2Res.l });
-  } else if (hasDirectP5) {
-    const p5_t1 = getTeamName(stdA, 2, '3. Gruppe A');
-    const p5_t2 = getTeamName(stdB, 2, '3. Gruppe B');
-    r5Matches.push({ id: 'p5_direct', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: '3. Gruppe A vs. 3. Gruppe B', t1: p5_t1, t2: p5_t2 });
-  }
-
-  r5Matches.forEach(m => {
     const sc = state.playoffScores[m.id] || { s1: '', s2: '' };
     const card = document.createElement('div');
     card.className = 'playoff-match-card' + (m.isFinal ? ' final-highlight' : '');
@@ -2171,8 +1977,243 @@ function renderPlayoffs() {
         <div class="team-label away" title="${m.t2}">${m.t2}</div>
       </div>
     `;
-    c5.appendChild(card);
-  });
+    container.appendChild(card);
+  }
+
+  // =========================================================================
+  // 1. LEAGUE MODE (Jeder gegen Jeden)
+  // =========================================================================
+  if (mode === 'LEAGUE') {
+    if (r4CardTitle) r4CardTitle.textContent = '🏆 Meisterschafts-Entscheidung & Platzierungsspiele';
+    if (r5Card) r5Card.style.display = 'none';
+
+    const std = calculateGroupStandings(structure.groups[0].teams);
+    const t1 = std[0] ? std[0].name : '1. Tabelle';
+    const t2 = std[1] ? std[1].name : '2. Tabelle';
+    const t3 = std[2] ? std[2].name : '3. Tabelle';
+    const t4 = std[3] ? std[3].name : '4. Tabelle';
+
+    const matches = [
+      { id: 'lg_fin', court: 'Korb 1', title: '🏆 GROSSES MEISTERSCHAFTS-FINALE', sub: '1. Tabelle vs. 2. Tabelle', t1, t2, isFinal: true },
+      { id: 'lg_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: '3. Tabelle vs. 4. Tabelle', t1: t3, t2: t4 },
+    ];
+    matches.forEach(m => renderPlayoffCard(m, c4));
+
+    const finSc = state.playoffScores['lg_fin'];
+    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? t1 : t2;
+      document.getElementById('champ-team-name').textContent = winner;
+      champBox.style.display = 'block';
+    } else if (std[0] && std[0].sp > 0 && champBox) {
+      document.getElementById('champ-team-name').textContent = std[0].name + ' (Tabellenführer)';
+      champBox.style.display = 'block';
+    } else if (champBox) {
+      champBox.style.display = 'none';
+    }
+    return;
+  }
+
+  // =========================================================================
+  // 2. KNOCKOUT MODE (Reiner K.o.-Turnierbaum)
+  // =========================================================================
+  if (mode === 'KNOCKOUT') {
+    if (r5Card) r5Card.style.display = 'block';
+    const t = (i, fb) => (state.teams[i] ? state.teams[i].name : fb);
+
+    if (N <= 4) {
+      if (r4CardTitle) r4CardTitle.textContent = 'Runde 1: Halbfinals (K.o.)';
+      if (r5CardTitle) r5CardTitle.textContent = 'Runde 2: Großes Finale & Kleines Finale';
+
+      const hf1 = { id: 'ko_hf1', court: 'Korb 1', title: '🏀 HALBFINALE 1', sub: 'Team 1 vs. Team 4', t1: t(0, 'Team 1'), t2: t(3, 'Team 4') };
+      const hf2 = { id: 'ko_hf2', court: 'Korb 2', title: '🏀 HALBFINALE 2', sub: 'Team 2 vs. Team 3', t1: t(1, 'Team 2'), t2: t(2, 'Team 3') };
+      renderPlayoffCard(hf1, c4);
+      renderPlayoffCard(hf2, c4);
+
+      const hf1Res = getWinLose('ko_hf1', hf1.t1, hf1.t2);
+      const hf2Res = getWinLose('ko_hf2', hf2.t1, hf2.t2);
+
+      const fin = { id: 'ko_final', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; SPIEL UM PLATZ 1 & 2', sub: 'Sieger HF 1 vs. Sieger HF 2', t1: hf1Res.w, t2: hf2Res.w, isFinal: true };
+      const p3 = { id: 'ko_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: 'Verlierer HF 1 vs. Verlierer HF 2', t1: hf1Res.l, t2: hf2Res.l };
+      renderPlayoffCard(fin, c5);
+      renderPlayoffCard(p3, c5);
+
+      const finSc = state.playoffScores['ko_final'];
+      if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+        const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? hf1Res.w : hf2Res.w;
+        document.getElementById('champ-team-name').textContent = winner;
+        champBox.style.display = 'block';
+      } else if (champBox) champBox.style.display = 'none';
+      return;
+    }
+
+    // 5 to 12 teams Knockout
+    if (r4CardTitle) r4CardTitle.textContent = 'Runde 1: Viertelfinals';
+    if (r5CardTitle) r5CardTitle.textContent = 'Runde 2 & 3: Halbfinals, Finale & Platzierungsspiele';
+
+    const vf = [
+      { id: 'ko_vf1', court: 'Korb 1', title: '⚡ VIERTELFINALE 1', sub: '1 vs. 8', t1: t(0, 'Team 1'), t2: t(7, 'Team 8') },
+      { id: 'ko_vf2', court: 'Korb 2', title: '⚡ VIERTELFINALE 2', sub: '4 vs. 5', t1: t(3, 'Team 4'), t2: t(4, 'Team 5') },
+      { id: 'ko_vf3', court: 'Korb 3', title: '⚡ VIERTELFINALE 3', sub: '2 vs. 7', t1: t(1, 'Team 2'), t2: t(6, 'Team 7') },
+      { id: 'ko_vf4', court: 'Korb 4', title: '⚡ VIERTELFINALE 4', sub: '3 vs. 6', t1: t(2, 'Team 3'), t2: t(5, 'Team 6') }
+    ];
+    vf.forEach(m => renderPlayoffCard(m, c4));
+
+    const vf1Res = getWinLose('ko_vf1', vf[0].t1, vf[0].t2);
+    const vf2Res = getWinLose('ko_vf2', vf[1].t1, vf[1].t2);
+    const vf3Res = getWinLose('ko_vf3', vf[2].t1, vf[2].t2);
+    const vf4Res = getWinLose('ko_vf4', vf[3].t1, vf[3].t2);
+
+    const r5 = [
+      { id: 'ko_hf1', court: 'Korb 1', title: '🏀 HALBFINALE 1', sub: 'Sieger VF 1 vs. Sieger VF 2', t1: vf1Res.w, t2: vf2Res.w },
+      { id: 'ko_hf2', court: 'Korb 2', title: '🏀 HALBFINALE 2', sub: 'Sieger VF 3 vs. Sieger VF 4', t1: vf3Res.w, t2: vf4Res.w },
+      { id: 'ko_phf1', court: 'Korb 3', title: 'PLATZIERUNGS-HF 1', sub: 'Verlierer VF 1 vs. Verlierer VF 2', t1: vf1Res.l, t2: vf2Res.l },
+      { id: 'ko_phf2', court: 'Korb 4', title: 'PLATZIERUNGS-HF 2', sub: 'Verlierer VF 3 vs. Verlierer VF 4', t1: vf3Res.l, t2: vf4Res.l }
+    ];
+
+    const hf1Res = getWinLose('ko_hf1', vf1Res.w, vf2Res.w);
+    const hf2Res = getWinLose('ko_hf2', vf3Res.w, vf4Res.w);
+    const phf1Res = getWinLose('ko_phf1', vf1Res.l, vf2Res.l);
+    const phf2Res = getWinLose('ko_phf2', vf3Res.l, vf4Res.l);
+
+    r5.push({ id: 'ko_final', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; PLATZ 1 & 2', sub: 'Sieger HF 1 vs. Sieger HF 2', t1: hf1Res.w, t2: hf2Res.w, isFinal: true });
+    r5.push({ id: 'ko_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; PLATZ 3 & 4', sub: 'Verlierer HF 1 vs. Verlierer HF 2', t1: hf1Res.l, t2: hf2Res.l });
+    r5.push({ id: 'ko_p5', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: 'Sieger Platzierungs-HF 1 vs. Sieger Platzierungs-HF 2', t1: phf1Res.w, t2: phf2Res.w });
+    r5.push({ id: 'ko_p7', court: 'Korb 4', title: '🎖 SPIEL UM PLATZ 7 & 8', sub: 'Verlierer Platzierungs-HF 1 vs. Verlierer Platzierungs-HF 2', t1: phf1Res.l, t2: phf2Res.l });
+
+    r5.forEach(m => renderPlayoffCard(m, c5));
+
+    const finSc = state.playoffScores['ko_final'];
+    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? hf1Res.w : hf2Res.w;
+      document.getElementById('champ-team-name').textContent = winner;
+      champBox.style.display = 'block';
+    } else if (champBox) champBox.style.display = 'none';
+    return;
+  }
+
+  // =========================================================================
+  // 3. GROUPS MODE (4 bis 12 Teams) - DYNAMISCH ANGEPASST
+  // =========================================================================
+  if (N <= 5) {
+    // Single group: 4 or 5 teams
+    if (r4CardTitle) r4CardTitle.textContent = '🏆 Platzierungs- & Finalspiele';
+    if (r5Card) r5Card.style.display = 'none';
+
+    const std = calculateGroupStandings(structure.groups[0].teams);
+    const t1 = std[0] ? std[0].name : '1. Vorrunde';
+    const t2 = std[1] ? std[1].name : '2. Vorrunde';
+    const t3 = std[2] ? std[2].name : '3. Vorrunde';
+    const t4 = std[3] ? std[3].name : '4. Vorrunde';
+
+    const matches = [
+      { id: 'p_fin', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; SPIEL UM PLATZ 1 & 2', sub: '1. Vorrunde vs. 2. Vorrunde', t1, t2, isFinal: true },
+      { id: 'p_p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: '3. Vorrunde vs. 4. Vorrunde', t1: t3, t2: t4 },
+    ];
+    if (N === 5) {
+      const t5 = std[4] ? std[4].name : '5. Vorrunde';
+      matches.push({ id: 'p5_auto', court: 'Vorrunde', title: '🎖 PLATZ 5', sub: '5. Platz Vorrunde', t1: t5, isAutoRank: true });
+    }
+    matches.forEach(m => renderPlayoffCard(m, c4));
+
+    const finSc = state.playoffScores['p_fin'];
+    if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
+      const winner = parseInt(finSc.s1) > parseInt(finSc.s2) ? t1 : t2;
+      document.getElementById('champ-team-name').textContent = winner;
+      champBox.style.display = 'block';
+    } else if (champBox) champBox.style.display = 'none';
+    return;
+  }
+
+  // TWO GROUPS: 6 bis 12 Teams
+  if (r5Card) r5Card.style.display = 'block';
+
+  const stdA = calculateGroupStandings(structure.groups[0].teams);
+  const stdB = calculateGroupStandings(structure.groups[1] ? structure.groups[1].teams : []);
+
+  const hasPhf = (stdA.length >= 4 && stdB.length >= 4);
+
+  if (hasPhf) {
+    if (r4CardTitle) r4CardTitle.textContent = 'Runde 4: Halbfinals & Platzierungs-Halbfinals';
+  } else {
+    if (r4CardTitle) r4CardTitle.textContent = 'Runde 4: Halbfinals & Platzierungsspiele';
+  }
+  if (r5CardTitle) r5CardTitle.textContent = `Runde 5: Großes Finale & Endplatzierungen (Plätze 1–${N})`;
+
+  // Semifinals (1st vs 2nd)
+  const hf1_t1 = getTeamName(stdA, 0, '1. Gruppe A');
+  const hf1_t2 = getTeamName(stdB, 1, '2. Gruppe B');
+  const hf2_t1 = getTeamName(stdB, 0, '1. Gruppe B');
+  const hf2_t2 = getTeamName(stdA, 1, '2. Gruppe A');
+
+  const r4Matches = [
+    { id: 'hf1', court: 'Korb 1', title: '🏀 HALBFINALE 1', sub: '1. Gruppe A vs. 2. Gruppe B', t1: hf1_t1, t2: hf1_t2 },
+    { id: 'hf2', court: 'Korb 2', title: '🏀 HALBFINALE 2', sub: '1. Gruppe B vs. 2. Gruppe A', t1: hf2_t1, t2: hf2_t2 },
+  ];
+
+  // Placement matches for R4
+  if (hasPhf) {
+    // 8, 9, 10, 11, 12 teams
+    const phf1_t1 = getTeamName(stdA, 2, '3. Gruppe A');
+    const phf1_t2 = getTeamName(stdB, 3, '4. Gruppe B');
+    const phf2_t1 = getTeamName(stdB, 2, '3. Gruppe B');
+    const phf2_t2 = getTeamName(stdA, 3, '4. Gruppe A');
+    r4Matches.push({ id: 'phf1', court: 'Korb 3', title: 'PLATZIERUNGS-HALBFINALE 1', sub: '3. Gruppe A vs. 4. Gruppe B (um Plätze 5–8)', t1: phf1_t1, t2: phf1_t2 });
+    r4Matches.push({ id: 'phf2', court: 'Korb 4', title: 'PLATZIERUNGS-HALBFINALE 2', sub: '3. Gruppe B vs. 4. Gruppe A (um Plätze 5–8)', t1: phf2_t1, t2: phf2_t2 });
+  } else {
+    // 6 or 7 teams: Direct 5th & 6th place match
+    const p5_t1 = getTeamName(stdA, 2, '3. Gruppe A');
+    const p5_t2 = getTeamName(stdB, 2, '3. Gruppe B');
+    r4Matches.push({ id: 'p5_dir', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: '3. Gruppe A vs. 3. Gruppe B', t1: p5_t1, t2: p5_t2 });
+    if (stdA.length >= 4) {
+      // 7 teams: 4th in A gets 7th place
+      const p7_team = getTeamName(stdA, 3, '4. Gruppe A');
+      r4Matches.push({ id: 'p7_auto', court: 'Vorrunde', title: '🎖 PLATZ 7', sub: '4. Gruppe A (Vorrundenplatzierung)', t1: p7_team, isAutoRank: true });
+    }
+  }
+
+  // Placements for 9, 10, 11, 12
+  if (stdA.length >= 5 && stdB.length >= 5) {
+    const p9_t1 = getTeamName(stdA, 4, '5. Gruppe A');
+    const p9_t2 = getTeamName(stdB, 4, '5. Gruppe B');
+    r4Matches.push({ id: 'p9', court: 'Korb 1 (nach HF)', title: '🎖 SPIEL UM PLATZ 9 & 10', sub: '5. Gruppe A vs. 5. Gruppe B', t1: p9_t1, t2: p9_t2 });
+  } else if (stdA.length >= 5) {
+    const p9_team = getTeamName(stdA, 4, '5. Gruppe A');
+    r4Matches.push({ id: 'p9_auto', court: 'Vorrunde', title: '🎖 PLATZ 9', sub: '5. Gruppe A (Vorrundenplatzierung)', t1: p9_team, isAutoRank: true });
+  }
+
+  if (stdA.length >= 6 && stdB.length >= 6) {
+    const p11_t1 = getTeamName(stdA, 5, '6. Gruppe A');
+    const p11_t2 = getTeamName(stdB, 5, '6. Gruppe B');
+    r4Matches.push({ id: 'p11', court: 'Korb 2 (nach HF)', title: '🎖 SPIEL UM PLATZ 11 & 12', sub: '6. Gruppe A vs. 6. Gruppe B', t1: p11_t1, t2: p11_t2 });
+  } else if (stdA.length >= 6) {
+    const p11_team = getTeamName(stdA, 5, '6. Gruppe A');
+    r4Matches.push({ id: 'p11_auto', court: 'Vorrunde', title: '🎖 PLATZ 11', sub: '6. Gruppe A (Vorrundenplatzierung)', t1: p11_team, isAutoRank: true });
+  }
+
+  r4Matches.forEach(m => renderPlayoffCard(m, c4));
+
+  // Finals (Round 5)
+  const hf1Res = getWinLose('hf1', hf1_t1, hf1_t2);
+  const hf2Res = getWinLose('hf2', hf2_t1, hf2_t2);
+
+  const r5Matches = [
+    { id: 'final', court: 'Korb 1', title: '🏆 GROSSES FINALE &bull; SPIEL UM PLATZ 1 & 2', sub: 'Sieger Halbfinale 1 vs. Sieger Halbfinale 2', t1: hf1Res.w, t2: hf2Res.w, isFinal: true },
+    { id: 'p3', court: 'Korb 2', title: '🥉 KLEINES FINALE &bull; SPIEL UM PLATZ 3 & 4', sub: 'Verlierer Halbfinale 1 vs. Verlierer Halbfinale 2', t1: hf1Res.l, t2: hf2Res.l },
+  ];
+
+  if (hasPhf) {
+    const phf1_t1 = getTeamName(stdA, 2, '3. Gruppe A');
+    const phf1_t2 = getTeamName(stdB, 3, '4. Gruppe B');
+    const phf2_t1 = getTeamName(stdB, 2, '3. Gruppe B');
+    const phf2_t2 = getTeamName(stdA, 3, '4. Gruppe A');
+    const phf1Res = getWinLose('phf1', phf1_t1, phf1_t2);
+    const phf2Res = getWinLose('phf2', phf2_t1, phf2_t2);
+
+    r5Matches.push({ id: 'p5', court: 'Korb 3', title: '🎖 SPIEL UM PLATZ 5 & 6', sub: 'Sieger Platzierungs-HF 1 vs. Sieger Platzierungs-HF 2', t1: phf1Res.w, t2: phf2Res.w });
+    r5Matches.push({ id: 'p7', court: 'Korb 4', title: '🎖 SPIEL UM PLATZ 7 & 8', sub: 'Verlierer Platzierungs-HF 1 vs. Verlierer Platzierungs-HF 2', t1: phf1Res.l, t2: phf2Res.l });
+  }
+
+  r5Matches.forEach(m => renderPlayoffCard(m, c5));
 
   const finSc = state.playoffScores['final'];
   if (finSc && finSc.s1 !== '' && finSc.s2 !== '' && finSc.s1 !== finSc.s2 && champBox) {
